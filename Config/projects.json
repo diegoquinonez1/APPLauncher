@@ -1,0 +1,16 @@
+{
+  "projects": [
+    {
+      "name": "BAIS DEV",
+      "environment": "DEV",
+      "user": "adm-A0836618",
+      "solution": "",
+      "folder": "",
+      "startupApps": [
+        "SSMS",
+        "VisualStudio",
+        "VSCode"
+      ]
+    }
+  ]
+}
