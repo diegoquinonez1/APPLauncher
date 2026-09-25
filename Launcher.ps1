@@ -24,6 +24,8 @@ $Root = Split-Path $MyInvocation.MyCommand.Path -Parent
 . "$Root\Modules\ProfileManager.ps1"
 . "$Root\Modules\ProjectLauncher.ps1"
 . "$Root\Modules\UsersForm.ps1"
+. "$Root\Modules\CredentialForm.ps1"
+. "$Root\Modules\FavoriteForm.ps1"
 
 # ==================================
 # LOAD DATA
@@ -309,12 +311,26 @@ $btnCreds.Size = New-Object Drawing.Size(200,40)
 
 $btnCreds.Add_Click({
 
-    Start-Process cmd.exe `
-        "/k cmdkey /list"
+    Show-CredentialForm `
+        (Get-Users).users
 
 })
 
 $form.Controls.Add($btnCreds)
+
+$btnFav = New-Object System.Windows.Forms.Button
+
+$btnFav.Text = "Favoritos"
+$btnFav.Location = New-Object Drawing.Point(580,335)
+$btnFav.Size = New-Object Drawing.Size(200,40)
+
+$btnFav.Add_Click({
+
+    Show-FavoriteForm
+
+})
+
+$form.Controls.Add($btnFav)
 
 # ------------------------------
 
@@ -353,7 +369,7 @@ function Get-AppStatus {
 
 $btnScan = New-Object System.Windows.Forms.Button
 $btnScan.Text = "Reescanear"
-$btnScan.Location = New-Object Drawing.Point(350,335)
+$btnScan.Location = New-Object Drawing.Point(350,535)
 $btnScan.Size = New-Object Drawing.Size(430,40)
 
 $form.Controls.Add($btnScan)
@@ -457,7 +473,7 @@ $btnBAIS.Add_Click({
 
 $btnExit = New-Object System.Windows.Forms.Button
 $btnExit.Text = "Salir"
-$btnExit.Location = New-Object Drawing.Point(780,580)
+$btnExit.Location = New-Object Drawing.Point(780,600)
 $btnExit.Size = New-Object Drawing.Size(120,35)
 
 $btnExit.Add_Click({

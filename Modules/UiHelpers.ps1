@@ -4,7 +4,7 @@ function Show-Info {
         [string]$Message
     )
 
-    [System.Windows.Forms.MessageBox\]::Show(
+    [System.Windows.Forms.MessageBox]::Show(
         $Message,
         "AON Launcher",
         [System.Windows.Forms.MessageBoxButtons]::OK,
@@ -18,7 +18,7 @@ function Show-Error {
         [string]$Message
     )
 
-    [System.Windows.Forms.MessageBox\]::Show(
+    [System.Windows.Forms.MessageBox]::Show(
         $Message,
         "Error",
         [System.Windows.Forms.MessageBoxButtons]::OK,
