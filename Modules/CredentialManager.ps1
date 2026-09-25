@@ -203,3 +203,27 @@ function Get-LauncherCredential {
     }
 
 }
+
+function Copy-LauncherCredentialToClipboard {
+
+    param(
+        [string]$Environment,
+        [string]$User
+    )
+
+    $credential =
+        Get-LauncherCredential `
+            $Environment `
+            $User
+
+    if(!$credential){
+
+        throw "No existe una credencial configurada para el usuario y entorno seleccionados."
+
+    }
+
+    [System.Windows.Forms.Clipboard]::SetText(
+        $credential.Password
+    )
+
+}

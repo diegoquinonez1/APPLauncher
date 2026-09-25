@@ -8,9 +8,31 @@ function Show-CredentialForm {
 
     $formCred.Text = "Administración de Credenciales"
     $formCred.Width = 650
-    $formCred.Height = 420
+    $formCred.Height = 500
     $formCred.StartPosition = "CenterParent"
     $formCred.MaximizeBox = $false
+
+    $script:clipboardTimer =
+    New-Object System.Windows.Forms.Timer
+
+    $script:clipboardTimer.Interval = 60000
+
+    $script:clipboardTimer.Add_Tick({
+
+        try{
+
+            [System.Windows.Forms.Clipboard]::Clear()
+
+            $lblStatus.Text =
+                "Estado: Portapapeles limpiado"
+
+        }
+        catch{
+        }
+
+        $script:clipboardTimer.Stop()
+
+    })
 
     # ==================================
     # USUARIO
@@ -233,13 +255,60 @@ function Show-CredentialForm {
     $formCred.Controls.Add($btnDelete)
 
     # ==================================
+    # COPIAR PASSWORD
+    # ==================================
+
+    $btnCopy = New-Object System.Windows.Forms.Button
+
+    $btnCopy.Text = "Copiar Contraseña"
+
+    $btnCopy.Location =
+        New-Object Drawing.Point(330,195)
+
+    $btnCopy.Size =
+        New-Object Drawing.Size(250,40)
+
+    $btnCopy.Add_Click({
+
+        try{
+
+            Copy-LauncherCredentialToClipboard `
+                $cmbEnv.Text `
+                $cmbUser.Text
+
+            $clipboardTimer.Stop()
+            $clipboardTimer.Start()
+
+            $formCred.Activate()
+
+            $lblStatus.Text =
+                "Estado: Contraseña copiada (60 seg)"
+
+            Show-Info @"
+La contraseña fue copiada al portapapeles.
+ 
+Se eliminará automáticamente en 60 segundos.
+"@
+
+        }
+        catch{
+
+            Show-Error $_.Exception.Message
+
+        }
+
+    })
+
+    $formCred.Controls.Add($btnCopy)
+
+    # ==================================
     # CERRAR
     # ==================================
 
     $btnClose = New-Object System.Windows.Forms.Button
 
     $btnClose.Text = "Cerrar"
-    $btnClose.Location = New-Object Drawing.Point(330,250)
+    $btnClose.Location = New-Object Drawing.Point(330,310)
     $btnClose.Size = New-Object Drawing.Size(250,40)
 
     $btnClose.Add_Click({
