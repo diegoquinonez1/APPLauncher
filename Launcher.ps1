@@ -5,8 +5,28 @@ Add-Type -AssemblyName Microsoft.VisualBasic
 # ==================================
 # ROOT
 # ==================================
+$Root = ""
 
-$Root = Split-Path $MyInvocation.MyCommand.Path -Parent
+if ($PSScriptRoot) {
+
+    $Root = $PSScriptRoot
+
+}
+elseif ($MyInvocation.MyCommand.Path) {
+
+    $Root = Split-Path $MyInvocation.MyCommand.Path -Parent
+
+}
+else {
+
+    $Root = Split-Path `
+        ([System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName) `
+        -Parent
+
+}
+[System.Windows.Forms.MessageBox]::Show(
+"Root = $Root"
+)
 
 # ==================================
 # IMPORT MODULES
