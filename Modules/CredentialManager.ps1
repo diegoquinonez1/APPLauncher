@@ -1,38 +1,69 @@
-function Get-EnvironmentDomain {
+function Get-Credentials {
+
+    Get-JsonFile "credentials.json"
+
+}
+
+function Save-Credentials {
+
+    param($Data)
+
+    Save-JsonFile `
+        "credentials.json" `
+        $Data
+
+}
+
+function Protect-Password {
 
     param(
-        [string]$Environment
+        [string]$Password
     )
 
-    switch($Environment){
+    $secure =
+        ConvertTo-SecureString `
+            $Password `
+            -AsPlainText `
+            -Force
 
-        "DEV" {
-            return "devaonnet"
-        }
+    return $secure |
+        ConvertFrom-SecureString
 
-        "QC" {
-            return "extadqc"
-        }
+}
 
-        "PROD" {
-            return "extad"
-        }
+function Unprotect-Password {
+
+    param(
+        [string]$EncryptedPassword
+    )
+
+    $secure =
+        ConvertTo-SecureString `
+            $EncryptedPassword
+
+    $ptr =
+        [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR(
+            $secure
+        )
+
+    try {
+
+        return [System.Runtime.InteropServices.Marshal]::PtrToStringAuto(
+            $ptr
+        )
+
     }
+    finally {
+
+        [System.Runtime.InteropServices.Marshal]::ZeroFreeBSTR(
+            $ptr
+        )
+
+    }
+
 }
 
-function Get-CredentialTarget {
-
-    param(
-        [string]$Environment,
-        [string]$User
-    )
-
-    return "AON_{0}_{1}" -f `
-        $Environment,
-        $User
-}
-
-function Add-LauncherCredential {
+function Save-LauncherCredential {
 
     param(
         [string]$Environment,
@@ -40,16 +71,49 @@ function Add-LauncherCredential {
         [string]$Password
     )
 
-    $domain = Get-EnvironmentDomain $Environment
+    $store = Get-Credentials
 
-    $target = Get-CredentialTarget `
-        $Environment `
-        $User
+    $existing =
+        $store.credentials |
+        Where-Object {
 
-    cmdkey `
-        /add:$target `
-        /user:$domain\$User `
-        /pass:$Password
+            $_.environment -eq $Environment -and
+            $_.user -eq $User
+
+        }
+
+    if($existing){
+
+        $existing.password =
+            Protect-Password $Password
+
+        $existing.updatedAt =
+            (Get-Date).ToString("s")
+
+    }
+    else{
+
+        $store.credentials +=
+            [PSCustomObject]@{
+
+                environment =
+                    $Environment
+
+                user =
+                    $User
+
+                password =
+                    (Protect-Password $Password)
+
+                updatedAt =
+                    (Get-Date).ToString("s")
+
+            }
+
+    }
+
+    Save-Credentials $store
+
 }
 
 function Remove-LauncherCredential {
@@ -59,12 +123,23 @@ function Remove-LauncherCredential {
         [string]$User
     )
 
-    $target = Get-CredentialTarget `
-        $Environment `
-        $User
+    $store = Get-Credentials
 
-    cmdkey `
-        /delete:$target
+    $store.credentials =
+        @(
+            $store.credentials |
+            Where-Object {
+
+                !(
+                    $_.environment -eq $Environment -and
+                    $_.user -eq $User
+                )
+
+            }
+        )
+
+    Save-Credentials $store
+
 }
 
 function Test-LauncherCredential {
@@ -74,19 +149,57 @@ function Test-LauncherCredential {
         [string]$User
     )
 
-    $target = Get-CredentialTarget `
-        $Environment `
-        $User
+    $store = Get-Credentials
 
-    $result = cmdkey /list
+    return $null -ne (
+        $store.credentials |
+        Where-Object {
 
-    return (
-        $result |
-        Select-String $target
-    ) -ne $null
+            $_.environment -eq $Environment -and
+            $_.user -eq $User
+
+        } |
+        Select-Object -First 1
+    )
+
 }
 
-function Get-LauncherCredentials {
+function Get-LauncherCredential {
 
-    cmdkey /list
+    param(
+        [string]$Environment,
+        [string]$User
+    )
+
+    $store = Get-Credentials
+
+    $cred =
+        $store.credentials |
+        Where-Object {
+
+            $_.environment -eq $Environment -and
+            $_.user -eq $User
+
+        } |
+        Select-Object -First 1
+
+    if(!$cred){
+
+        return $null
+
+    }
+
+    return [PSCustomObject]@{
+
+        Environment =
+            $Environment
+
+        User =
+            $User
+
+        Password =
+            (Unprotect-Password $cred.password)
+
+    }
+
 }

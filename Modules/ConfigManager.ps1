@@ -144,6 +144,25 @@ function Initialize-LauncherConfiguration {
 
     }
 
+    # ===============================
+    # credentials.json
+    # ===============================
+
+    $credentialsFile =
+        Join-Path $Global:ConfigFolder "credentials.json"
+
+    if(!(Test-Path $credentialsFile)){
+
+        @{
+            credentials = @()
+        } |
+        ConvertTo-Json -Depth 5 |
+        Set-Content `
+            $credentialsFile `
+            -Encoding UTF8
+
+    }
+
 }
 
 function Get-JsonFile {

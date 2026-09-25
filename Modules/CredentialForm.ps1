@@ -132,7 +132,7 @@ function Show-CredentialForm {
 
         try{
 
-            Add-LauncherCredential `
+            Save-LauncherCredential `
                 $cmbEnv.Text `
                 $cmbUser.Text `
                 $txtPassword.Text
@@ -231,25 +231,6 @@ function Show-CredentialForm {
     })
 
     $formCred.Controls.Add($btnDelete)
-
-    # ==============
-    # VER CMDKEY
-    # ==================================
-
-    $btnList = New-Object System.Windows.Forms.Button
-
-    $btnList.Text = "Ver Credenciales Windows"
-    $btnList.Location = New-Object Drawing.Point(330,195)
-    $btnList.Size = New-Object Drawing.Size(250,40)
-
-    $btnList.Add_Click({
-
-        Start-Process cmd.exe `
-            "/k cmdkey /list"
-
-    })
-
-    $formCred.Controls.Add($btnList)
 
     # ==================================
     # CERRAR
