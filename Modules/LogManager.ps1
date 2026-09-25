@@ -11,7 +11,7 @@ function Write-LauncherLog {
     )
 
     $line =
-        "{0} | {1} | {2} | {3}" -f `
+        "{0} | INFO | {1} | {2} | {3}" -f `
         (Get-Date -Format "yyyy-MM-dd HH:mm:ss"),
         $Environment,
         $User,
@@ -20,6 +20,24 @@ function Write-LauncherLog {
     Add-Content `
         -Path $Global:LogFile `
         -Value $line
+
+}
+
+function Write-ErrorLog {
+
+    param(
+        [string]$Message
+    )
+
+    $line =
+        "{0} | ERROR | {1}" -f `
+        (Get-Date -Format "yyyy-MM-dd HH:mm:ss"),
+        $Message
+
+    Add-Content `
+        -Path $Global:LogFile `
+        -Value $line
+
 }
 
 function Get-LauncherLogs {
@@ -27,12 +45,15 @@ function Get-LauncherLogs {
     if(!(Test-Path $Global:LogFile)){
 
         return @()
+
     }
 
     return Get-Content $Global:LogFile
+
 }
 
 function Clear-LauncherLogs {
 
     "" | Set-Content $Global:LogFile
+
 }

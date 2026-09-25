@@ -7,8 +7,8 @@ function Show-CredentialForm {
     $formCred = New-Object System.Windows.Forms.Form
 
     $formCred.Text = "Administración de Credenciales"
-    $formCred.Width = 520
-    $formCred.Height = 360
+    $formCred.Width = 650
+    $formCred.Height = 420
     $formCred.StartPosition = "CenterParent"
     $formCred.MaximizeBox = $false
 
@@ -19,7 +19,6 @@ function Show-CredentialForm {
     $lblUser = New-Object System.Windows.Forms.Label
     $lblUser.Text = "Usuario"
     $lblUser.Location = New-Object Drawing.Point(20,20)
-    $lblUser.AutoSize = $true
 
     $formCred.Controls.Add($lblUser)
 
@@ -45,44 +44,47 @@ function Show-CredentialForm {
     # ENTORNO
     # ==================================
 
-    $grpEnv = New-Object System.Windows.Forms.GroupBox
-    $grpEnv.Text = "Entorno"
-    $grpEnv.Location = New-Object Drawing.Point(20,90)
-    $grpEnv.Size = New-Object Drawing.Size(250,120)
+    $lblEnv = New-Object System.Windows.Forms.Label
+    $lblEnv.Text = "Entorno"
+    $lblEnv.Location = New-Object Drawing.Point(20,95)
 
-    $formCred.Controls.Add($grpEnv)
+    $formCred.Controls.Add($lblEnv)
 
-    $rbDev = New-Object System.Windows.Forms.RadioButton
-    $rbDev.Text = "DEV"
-    $rbDev.Checked = $true
-    $rbDev.Location = New-Object Drawing.Point(20,20)
+    $cmbEnv = New-Object System.Windows.Forms.ComboBox
+    $cmbEnv.Location = New-Object Drawing.Point(20,120)
+    $cmbEnv.Width = 250
 
-    $grpEnv.Controls.Add($rbDev)
+    @(
+        "DEV",
+        "QC",
+        "PROD"
+    ) | ForEach-Object {
 
-    $rbQc = New-Object System.Windows.Forms.RadioButton
-    $rbQc.Text = "QC"
-    $rbQc.Location = New-Object Drawing.Point(20,50)
+        [void]$cmbEnv.Items.Add($_)
 
-    $grpEnv.Controls.Add($rbQc)
-
-    $rbProd = New-Object System.Windows.Forms.RadioButton
-    $rbProd.Text = "PROD"
-    $rbProd.Location = New-Object Drawing.Point(20,80)
-
-    $grpEnv.Controls.Add($rbProd)
-
-    function Get-CredentialEnvironment {
-
-        if($rbDev.Checked){
-            return "DEV"
-        }
-
-        if($rbQc.Checked){
-            return "QC"
-        }
-
-        return "PROD"
     }
+
+    $cmbEnv.SelectedIndex = 0
+
+    $formCred.Controls.Add($cmbEnv)
+
+    # ==================================
+    # PASSWORD
+    # ==================================
+
+    $lblPassword = New-Object System.Windows.Forms.Label
+    $lblPassword.Text = "Contraseña"
+    $lblPassword.Location = New-Object Drawing.Point(20,170)
+
+    $formCred.Controls.Add($lblPassword)
+
+    $txtPassword = New-Object System.Windows.Forms.TextBox
+    $txtPassword.Location = New-Object Drawing.Point(20,195)
+    $txtPassword.Width = 250
+
+    $txtPassword.UseSystemPasswordChar = $true
+
+    $formCred.Controls.Add($txtPassword)
 
     # ==================================
     # ESTADO
@@ -90,43 +92,57 @@ function Show-CredentialForm {
 
     $lblStatus = New-Object System.Windows.Forms.Label
 
-    $lblStatus.Location = New-Object Drawing.Point(20,240)
     $lblStatus.AutoSize = $true
-    $lblStatus.Text = "Estado: Sin verificar"
+    $lblStatus.Location = New-Object Drawing.Point(20,255)
+
+    $lblStatus.Text =
+        "Estado: Sin verificar"
 
     $formCred.Controls.Add($lblStatus)
 
     # ==================================
-    # AGREGAR
+    # GUARDAR
     # ==================================
 
-    $btnAdd = New-Object System.Windows.Forms.Button
+    $btnSave = New-Object System.Windows.Forms.Button
 
-    $btnAdd.Text = "Agregar"
-    $btnAdd.Location = New-Object Drawing.Point(300,30)
-    $btnAdd.Size = New-Object Drawing.Size(170,35)
+    $btnSave.Text = "Guardar"
+    $btnSave.Location = New-Object Drawing.Point(330,30)
+    $btnSave.Size = New-Object Drawing.Size(250,40)
 
-    $btnAdd.Add_Click({
+    $btnSave.Add_Click({
 
-        $password =
-        [Microsoft.VisualBasic.Interaction]::InputBox(
-            "Ingrese la contraseña",
-            "Agregar credencial"
-        )
+        if(
+            [string]::IsNullOrWhiteSpace(
+                $cmbUser.Text
+            )
+        ){
+            Show-Error "Seleccione un usuario."
+            return
+        }
 
-        if([string]::IsNullOrWhiteSpace($password)){
+        if(
+            [string]::IsNullOrWhiteSpace(
+                $txtPassword.Text
+            )
+        ){
+            Show-Error "Ingrese una contraseña."
             return
         }
 
         try{
 
             Add-LauncherCredential `
-                (Get-CredentialEnvironment) `
+                $cmbEnv.Text `
                 $cmbUser.Text `
-                $password
+                $txtPassword.Text
+
+            $txtPassword.Clear()
 
             $lblStatus.Text =
-                "Estado: Credencial agregada"
+                "Estado: Credencial guardada"
+
+            Show-Info "Credencial almacenada."
 
         }
         catch{
@@ -137,7 +153,7 @@ function Show-CredentialForm {
 
     })
 
-    $formCred.Controls.Add($btnAdd)
+    $formCred.Controls.Add($btnSave)
 
     # ==================================
     # VERIFICAR
@@ -146,8 +162,8 @@ function Show-CredentialForm {
     $btnVerify = New-Object System.Windows.Forms.Button
 
     $btnVerify.Text = "Verificar"
-    $btnVerify.Location = New-Object Drawing.Point(300,80)
-    $btnVerify.Size = New-Object Drawing.Size(170,35)
+    $btnVerify.Location = New-Object Drawing.Point(330,85)
+    $btnVerify.Size = New-Object Drawing.Size(250,40)
 
     $btnVerify.Add_Click({
 
@@ -155,7 +171,7 @@ function Show-CredentialForm {
 
             $exists =
                 Test-LauncherCredential `
-                    (Get-CredentialEnvironment) `
+                    $cmbEnv.Text `
                     $cmbUser.Text
 
             if($exists){
@@ -189,19 +205,21 @@ function Show-CredentialForm {
     $btnDelete = New-Object System.Windows.Forms.Button
 
     $btnDelete.Text = "Eliminar"
-    $btnDelete.Location = New-Object Drawing.Point(300,130)
-    $btnDelete.Size = New-Object Drawing.Size(170,35)
+    $btnDelete.Location = New-Object Drawing.Point(330,140)
+    $btnDelete.Size = New-Object Drawing.Size(250,40)
 
     $btnDelete.Add_Click({
 
         try{
 
             Remove-LauncherCredential `
-                (Get-CredentialEnvironment) `
+                $cmbEnv.Text `
                 $cmbUser.Text
 
             $lblStatus.Text =
                 "Estado: Credencial eliminada"
+
+            Show-Info "Credencial eliminada."
 
         }
         catch{
@@ -214,14 +232,15 @@ function Show-CredentialForm {
 
     $formCred.Controls.Add($btnDelete)
 
-    # ============================= LISTAR CMDKEY
+    # ==============
+    # VER CMDKEY
     # ==================================
 
     $btnList = New-Object System.Windows.Forms.Button
 
-    $btnList.Text = "Ver todas"
-    $btnList.Location = New-Object Drawing.Point(300,180)
-    $btnList.Size = New-Object Drawing.Size(170,35)
+    $btnList.Text = "Ver Credenciales Windows"
+    $btnList.Location = New-Object Drawing.Point(330,195)
+    $btnList.Size = New-Object Drawing.Size(250,40)
 
     $btnList.Add_Click({
 
@@ -233,8 +252,27 @@ function Show-CredentialForm {
     $formCred.Controls.Add($btnList)
 
     # ==================================
-    # MOSTRAR
+    # CERRAR
+    # ==================================
+
+    $btnClose = New-Object System.Windows.Forms.Button
+
+    $btnClose.Text = "Cerrar"
+    $btnClose.Location = New-Object Drawing.Point(330,250)
+    $btnClose.Size = New-Object Drawing.Size(250,40)
+
+    $btnClose.Add_Click({
+
+        $formCred.Close()
+
+    })
+
+    $formCred.Controls.Add($btnClose)
+
+    # ==================================
+    # SHOW
     # ==================================
 
     [void]$formCred.ShowDialog()
+
 }

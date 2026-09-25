@@ -1,22 +1,11 @@
-2026-09-24 21:20:49 | DEV | devaonnet\adm-A0836618 | TEST
-2026-09-24 22:06:05 | DEV | devaonnet\adm-A0836618 | SSMS
-2026-09-24 22:09:02 | DEV | devaonnet\adm-A0836618 | SSMS
-2026-09-24 22:10:51 | QC | extadqc\adm-A0836618 | SSMS
-2026-09-24 22:19:45 | QC | extadqc\adm-A0836618 | ReportBuilder
-2026-09-24 22:21:42 | DEV | devaonnet\adm-A0836618 | SSMS
-2026-09-24 22:21:44 | DEV | devaonnet\adm-A0836618 | VisualStudio
-2026-09-24 22:21:46 | DEV | devaonnet\adm-A0836618 | VSCode
-2026-09-24 22:34:31 | QC | extadqc\adm-A0836618 | SSMS
-2026-09-24 22:34:39 | QC | extadqc\adm-A0836618 | VisualStudio
-2026-09-24 22:34:44 | QC | extadqc\adm-A0836618 | VSCode
-2026-09-24 22:34:51 | QC | extadqc\adm-A0836618 | ReportBuilder
-2026-09-24 22:39:01 | QC | extadqc\adm-A0836618 | SSMS
-2026-09-24 23:08:03 | DEV | devaonnet\adm-A0836618 | SSMS
-2026-09-24 23:12:28 | DEV | devaonnet\adm-A0836618 | SSMS
-2026-09-24 23:14:24 | DEV | devaonnet\adm-A0836618 | VisualStudio
-2026-09-24 23:14:26 | DEV | devaonnet\adm-A0836618 | SSMS
-2026-09-24 23:14:28 | DEV | devaonnet\adm-A0836618 | VSCode
-2026-09-24 23:14:31 | DEV | devaonnet\adm-A0836618 | ReportBuilder
-2026-09-24 23:19:11 | DEV | devaonnet\adm-A0836618 | SSMS
-2026-09-24 23:19:20 | DEV | devaonnet\adm-A0836618 | SSMS
-2026-09-24 23:27:32 | DEV | devaonnet\adm-A0836618 | SSMS
+2026-09-25 00:06:00 | INFO | DEV | devaonnet\ | SSMS
+2026-09-25 00:06:07 | INFO | DEV | devaonnet\ | SSMS
+2026-09-25 00:06:17 | INFO | DEV | devaonnet\ | VisualStudio
+2026-09-25 00:07:17 | INFO | DEV | devaonnet\ | ReportBuilder
+2026-09-25 00:07:21 | INFO | DEV | devaonnet\ | VSCode
+2026-09-25 00:10:05 | INFO | DEV | devaonnet\ | SSMS
+2026-09-25 00:10:10 | INFO | DEV | devaonnet\ | VisualStudio
+2026-09-25 00:11:06 | INFO | DEV | devaonnet\ | SSMS
+2026-09-25 00:13:30 | INFO | DEV | devaonnet\adm-A0836618 | SSMS
+2026-09-25 00:29:46 | INFO | DEV | devaonnet\adm-A0836618 | SSMS
+2026-09-25 00:30:05 | ERROR | No se encuentra el tipo [string].

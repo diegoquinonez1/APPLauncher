@@ -7,49 +7,152 @@ function Show-UsersForm {
     $formUsers = New-Object System.Windows.Forms.Form
 
     $formUsers.Text = "Administración de Usuarios"
-    $formUsers.Width = 500
-    $formUsers.Height = 400
+    $formUsers.Width = 650
+    $formUsers.Height = 450
     $formUsers.StartPosition = "CenterParent"
+    $formUsers.MaximizeBox = $false
+
+    # ==================================
+    # LISTA
+    # ==================================
 
     $list = New-Object System.Windows.Forms.ListBox
+
     $list.Location = New-Object Drawing.Point(20,20)
-    $list.Size = New-Object Drawing.Size(300,250)
-
-    $users = Get-Users
-
-    foreach($user in $users.users){
-
-        [void]$list.Items.Add($user)
-
-    }
+    $list.Size = New-Object Drawing.Size(250,320)
 
     $formUsers.Controls.Add($list)
 
-    # AGREGAR
+    # ==================================
+    # USUARIO
+    # ==================================
 
-    $btnAdd = New-Object System.Windows.Forms.Button
-    $btnAdd.Text = "Agregar"
-    $btnAdd.Location = New-Object Drawing.Point(340,20)
+    $lblUser = New-Object System.Windows.Forms.Label
 
-    $btnAdd.Add_Click({
+    $lblUser.Text = "Usuario"
+    $lblUser.Location = New-Object Drawing.Point(320,30)
+
+    $formUsers.Controls.Add($lblUser)
+
+    $txtUser = New-Object System.Windows.Forms.TextBox
+
+    $txtUser.Location = New-Object Drawing.Point(320,55)
+    $txtUser.Width = 250
+
+    $formUsers.Controls.Add($txtUser)
+
+    # ==================================
+    # REFRESH
+    # ==================================
+
+    function Refresh-Users {
+
+        $list.Items.Clear()
+
+        $users = Get-Users
+
+        foreach($user in $users.users){
+
+            [void]$list.Items.Add($user)
+
+        }
+    }
+
+    function Refresh-MainCombo {
+
+        $MainUserCombo.Items.Clear()
+
+        (Get-Users).users |
+        ForEach-Object {
+
+            [void]$MainUserCombo.Items.Add($_)
+
+        }
+    }
+
+    Refresh-Users
+
+    # ==================================
+    # CARGAR DETALLE
+    # ==================================
+
+    $list.Add_SelectedIndexChanged({
+
+        if($null -eq $list.SelectedItem){
+            return
+        }
+
+        $txtUser.Text =
+            $list.SelectedItem.ToString()
+
+    })
+
+    # ==================================
+    # NUEVO
+    # ==================================
+
+    $btnNew = New-Object System.Windows.Forms.Button
+
+    $btnNew.Text = "Nuevo"
+    $btnNew.Location = New-Object Drawing.Point(320,120)
+    $btnNew.Size = New-Object Drawing.Size(120,35)
+
+    $btnNew.Add_Click({
+
+        $txtUser.Clear()
+
+        $list.ClearSelected()
+
+    })
+
+    $formUsers.Controls.Add($btnNew)
+
+    # ==================================
+    # GUARDAR
+    # ==================================
+
+    $btnSave = New-Object System.Windows.Forms.Button
+
+    $btnSave.Text = "Guardar"
+    $btnSave.Location = New-Object Drawing.Point(450,120)
+    $btnSave.Size = New-Object Drawing.Size(120,35)
+
+    $btnSave.Add_Click({
 
         $newUser =
-        [Microsoft.VisualBasic.Interaction]::InputBox(
-            "Nuevo usuario",
-            "Agregar usuario"
-        )
+            $txtUser.Text.Trim()
 
-        if([string]::IsNullOrWhiteSpace($newUser)){
+        if(
+            [string]::IsNullOrWhiteSpace(
+                $newUser
+            )
+        ){
+            Show-Error "Usuario obligatorio."
             return
         }
 
         try{
 
-            Add-LauncherUser $newUser
+            if($null -eq $list.SelectedItem){
 
-            [void]$list.Items.Add($newUser)
+                Add-LauncherUser $newUser
 
-            [void]$MainUserCombo.Items.Add($newUser)
+            }
+            else{
+
+                $oldUser =
+                    $list.SelectedItem.ToString()
+
+                Update-LauncherUser `
+                    $oldUser `
+                    $newUser
+
+            }
+
+            Refresh-Users
+            Refresh-MainCombo
+
+            Show-Info "Usuario guardado."
 
         }
         catch{
@@ -60,17 +163,21 @@ function Show-UsersForm {
 
     })
 
-    $formUsers.Controls.Add($btnAdd)
+    $formUsers.Controls.Add($btnSave)
 
+    # ==================================
     # ELIMINAR
+    # ==================================
 
     $btnDelete = New-Object System.Windows.Forms.Button
+
     $btnDelete.Text = "Eliminar"
-    $btnDelete.Location = New-Object Drawing.Point(340,60)
+    $btnDelete.Location = New-Object Drawing.Point(320,170)
+    $btnDelete.Size = New-Object Drawing.Size(250,35)
 
     $btnDelete.Add_Click({
 
-        if(!$list.SelectedItem){
+        if($null -eq $list.SelectedItem){
             return
         }
 
@@ -79,18 +186,12 @@ function Show-UsersForm {
             Remove-LauncherUser `
                 $list.SelectedItem.ToString()
 
-            $list.Items.Remove(
-                $list.SelectedItem
-            )
+            Refresh-Users
+            Refresh-MainCombo
 
-            $MainUserCombo.Items.Clear()
-            
-            (Get-Users).users |
-            ForEach-Object {
-                
-                [void]$MainUserCombo.Items.Add($_)
-                
-            }
+            $txtUser.Clear()
+
+            Show-Info "Usuario eliminado."
 
         }
         catch{
@@ -103,67 +204,44 @@ function Show-UsersForm {
 
     $formUsers.Controls.Add($btnDelete)
 
-    # EDITAR
+    # ==================================
+    # INFO
+    # ==================================
 
-    $btnEdit = New-Object System.Windows.Forms.Button
-    $btnEdit.Text = "Editar"
-    $btnEdit.Location = New-Object Drawing.Point(340,100)
+    $lblInfo = New-Object System.Windows.Forms.Label
 
-    $btnEdit.Add_Click({
+    $lblInfo.AutoSize = $true
+    $lblInfo.Location = New-Object Drawing.Point(320,230)
 
-        if(!$list.SelectedItem){
-            return
-        }
+    $lblInfo.Text =
+        "El usuario predeterminado no puede" +
+        [Environment]::NewLine +
+        "editarse ni eliminarse."
 
-        $oldUser =
-            $list.SelectedItem.ToString()
+    $formUsers.Controls
+    
+    # ==================================
+    # CERRAR
+    # ==================================
 
-        $newUser =
-        [Microsoft.VisualBasic.Interaction]::InputBox(
-            "Nuevo valor",
-            "Editar Usuario",
-            $oldUser
-        )
+    $btnClose = New-Object System.Windows.Forms.Button
 
-        if([string]::IsNullOrWhiteSpace($newUser)){
-            return
-        }
+    $btnClose.Text = "Cerrar"
+    $btnClose.Location = New-Object Drawing.Point(320,300)
+    $btnClose.Size = New-Object Drawing.Size(250,40)
 
-        try{
+    $btnClose.Add_Click({
 
-            Update-LauncherUser `
-                $oldUser `
-                $newUser
-
-            $index =
-                $list.SelectedIndex
-
-            $list.Items.RemoveAt($index)
-
-            $list.Items.Insert(
-                $index,
-                $newUser
-            )
-
-            $MainUserCombo.Items.Clear()
-
-            (Get-Users).users |
-            ForEach-Object {
-
-            [void]$MainUserCombo.Items.Add($_)
-
-            }
-
-        }
-        catch{
-
-            Show-Error $_.Exception.Message
-
-        }
+        $formUsers.Close()
 
     })
 
-    $formUsers.Controls.Add($btnEdit)
+    $formUsers.Controls.Add($btnClose)
+
+    # ==================================
+    # SHOW
+    # ==================================
 
     [void]$formUsers.ShowDialog()
+
 }

@@ -5,6 +5,12 @@
                           "Environment":  "DEV",
                           "User":  "adm-A0836618",
                           "Application":  "SSMS"
+                      },
+                      {
+                          "Name":  "Code DEV",
+                          "User":  "adm-A0836618",
+                          "Environment":  "DEV",
+                          "Application":  "VSCode"
                       }
                   ]
 }

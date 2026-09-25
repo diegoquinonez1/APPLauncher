@@ -45,9 +45,9 @@ $users = Get-Users
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "AON Launcher V4.1"
 $form.MinimumSize =
-New-Object Drawing.Size(950,700)
+New-Object Drawing.Size(950,800)
 $form.Width = 950
-$form.Height = 700
+$form.Height = 800
 $form.StartPosition = "CenterScreen"
 $form.MaximizeBox = $false
 
@@ -65,8 +65,15 @@ $cmbUser = New-Object System.Windows.Forms.ComboBox
 $cmbUser.Location = New-Object Drawing.Point(20,45)
 $cmbUser.Width = 280
 
-$users.users | ForEach-Object {
+$users.users |
+Where-Object {
+    $null -ne $_ -and
+    -not [string]::IsNullOrWhiteSpace($_)
+} |
+ForEach-Object {
+
     [void]$cmbUser.Items.Add($_)
+
 }
 
 if(
@@ -80,6 +87,12 @@ else{
 }
 
 $form.Controls.Add($cmbUser)
+
+$cmbUser.Add_SelectedIndexChanged({
+
+    RefreshDashboard
+
+})
 
 # ==================================
 # USERS BUTTON
@@ -166,6 +179,74 @@ function RefreshEnvironmentLabel {
         (Get-SelectedEnvironment)
 }
 
+function RefreshDashboard {
+
+    if(
+        $null -eq $lblDashUser -or
+        $null -eq $lblDashEnv -or
+        $null -eq $lblDashApps -or
+        $null -eq $lblDashProjects -or
+        $null -eq $lblDashFav -or
+        $null -eq $lblDashScan
+    ){
+        return
+    }
+    
+    $apps = Get-Applications
+
+    $projects =
+        (Get-Projects).projects
+
+    $favorites =
+        (Get-Favorites).favorites
+
+    $appCount = 0
+
+    foreach($item in @(
+        $apps.SSMS,
+        $apps.VisualStudio,
+        $apps.VSCode,
+        $apps.ReportBuilder
+    ))
+    {
+
+        if(
+            (
+                -not [string]::IsNullOrWhiteSpace($item)
+            ) -and (
+                Test-Path $item
+            )
+        ){
+            $appCount++
+        }
+
+    }
+
+    $lblDashUser.Text =
+        "Usuario: " +
+        $cmbUser.Text
+
+    $lblDashEnv.Text =
+        "Entorno: " +
+        (Get-SelectedEnvironment)
+
+    $lblDashApps.Text =
+        "Aplicaciones: $appCount / 4"
+
+    $lblDashProjects.Text =
+        "Proyectos: " +
+        $projects.Count
+
+    $lblDashFav.Text =
+        "Favoritos: " +
+        $favorites.Count
+
+    $lblDashScan.Text =
+        "Último escaneo: " +
+        $apps.LastScan
+
+}
+
 function RefreshTheme {
 
     Set-EnvironmentTheme `
@@ -176,20 +257,113 @@ function RefreshTheme {
 $rbDev.Add_CheckedChanged({
     RefreshTheme
     RefreshEnvironmentLabel
+    RefreshDashboard
 })
 
 $rbQc.Add_CheckedChanged({
     RefreshTheme
     RefreshEnvironmentLabel
+    RefreshDashboard
 })
 
 $rbProd.Add_CheckedChanged({
     RefreshTheme
     RefreshEnvironmentLabel
+    RefreshDashboard
 })
 
 RefreshTheme
 RefreshEnvironmentLabel
+
+# ==================================
+# DASHBOARD
+# ==================================
+
+$grpDashboard =
+    New-Object System.Windows.Forms.GroupBox
+
+$grpDashboard.Text = "Dashboard"
+$grpDashboard.Location =
+    New-Object Drawing.Point(20,280)
+
+$grpDashboard.Size =
+    New-Object Drawing.Size(280,220)
+
+$form.Controls.Add($grpDashboard)
+
+$lblDashUser =
+    New-Object System.Windows.Forms.Label
+
+$lblDashUser.Location =
+    New-Object Drawing.Point(20,30)
+
+$lblDashUser.AutoSize = $true
+
+$grpDashboard.Controls.Add(
+    $lblDashUser
+)
+
+$lblDashEnv =
+    New-Object System.Windows.Forms.Label
+
+$lblDashEnv.Location =
+    New-Object Drawing.Point(20,60)
+
+$lblDashEnv.AutoSize = $true
+
+$grpDashboard.Controls.Add(
+    $lblDashEnv
+)
+
+$lblDashApps =
+    New-Object System.Windows.Forms.Label
+
+$lblDashApps.Location =
+    New-Object Drawing.Point(20,90)
+
+$lblDashApps.AutoSize = $true
+
+$grpDashboard.Controls.Add(
+    $lblDashApps
+)
+
+$lblDashProjects =
+    New-Object System.Windows.Forms.Label
+
+$lblDashProjects.Location =
+    New-Object Drawing.Point(20,120)
+
+$lblDashProjects.AutoSize = $true
+
+$grpDashboard.Controls.Add(
+    $lblDashProjects
+)
+
+$lblDashFav =
+    New-Object System.Windows.Forms.Label
+
+$lblDashFav.Location =
+    New-Object Drawing.Point(20,150)
+
+$lblDashFav.AutoSize = $true
+
+$grpDashboard.Controls.Add(
+    $lblDashFav
+)
+
+$lblDashScan =
+    New-Object System.Windows.Forms.Label
+
+$lblDashScan.Location =
+    New-Object Drawing.Point(20,180)
+
+$lblDashScan.AutoSize = $true
+
+$grpDashboard.Controls.Add(
+    $lblDashScan
+)
+
+RefreshDashboard
 
 # ==================================
 # APPLICATIONS
@@ -202,7 +376,7 @@ $btnSSMS.Size = New-Object Drawing.Size(200,60)
 
 $btnSSMS.Add_Click({
 
-    try{
+    Invoke-Safely {
 
         Start-AONApplication `
             "SSMS" `
@@ -210,11 +384,7 @@ $btnSSMS.Add_Click({
             $cmbUser.Text
 
     }
-    catch{
 
-        Show-Error $_.Exception.Message
-
-    }
 })
 
 $form.Controls.Add($btnSSMS)
@@ -228,17 +398,12 @@ $btnVS.Size = New-Object Drawing.Size(200,60)
 
 $btnVS.Add_Click({
 
-    try{
+    Invoke-Safely {
 
         Start-AONApplication `
             "VisualStudio" `
             (Get-SelectedEnvironment) `
             $cmbUser.Text
-
-    }
-    catch{
-
-        Show-Error $_.Exception.Message
 
     }
 
@@ -255,17 +420,12 @@ $btnCode.Size = New-Object Drawing.Size(200,60)
 
 $btnCode.Add_Click({
 
-    try{
+    Invoke-Safely {
 
         Start-AONApplication `
             "VSCode" `
             (Get-SelectedEnvironment) `
             $cmbUser.Text
-
-    }
-    catch{
-
-        Show-Error $_.Exception.Message
 
     }
 
@@ -282,17 +442,12 @@ $btnReport.Size = New-Object Drawing.Size(200,60)
 
 $btnReport.Add_Click({
 
-    try{
+    Invoke-Safely {
 
         Start-AONApplication `
             "ReportBuilder" `
             (Get-SelectedEnvironment) `
             $cmbUser.Text
-
-    }
-    catch{
-
-        Show-Error $_.Exception.Message
 
     }
 
@@ -311,8 +466,12 @@ $btnCreds.Size = New-Object Drawing.Size(200,40)
 
 $btnCreds.Add_Click({
 
-    Show-CredentialForm `
-        (Get-Users).users
+    Invoke-Safely {
+
+        Show-CredentialForm `
+            (Get-Users).users
+
+    }
 
 })
 
@@ -326,7 +485,11 @@ $btnFav.Size = New-Object Drawing.Size(200,40)
 
 $btnFav.Add_Click({
 
-    Show-FavoriteForm
+    Invoke-Safely {
+
+        Show-FavoriteForm
+
+    }
 
 })
 
@@ -341,8 +504,12 @@ $btnLogs.Size = New-Object Drawing.Size(200,40)
 
 $btnLogs.Add_Click({
 
-    notepad.exe `
-        "$Root\Logs\launcher.log"
+    Invoke-Safely {
+
+        notepad.exe `
+            "$Root\Logs\launcher.log"
+
+    }
 
 })
 
@@ -380,8 +547,8 @@ $form.Controls.Add($btnScan)
 
 $grpStatus = New-Object System.Windows.Forms.GroupBox
 $grpStatus.Text = "Estado de Aplicaciones"
-$grpStatus.Location = New-Object Drawing.Point(20,300)
-$grpStatus.Size = New-Object Drawing.Size(280,180)
+$grpStatus.Location = New-Object Drawing.Point(20,520)
+$grpStatus.Size = New-Object Drawing.Size(280,220)
 
 $form.Controls.Add($grpStatus)
 
@@ -401,41 +568,129 @@ $lblReportStatus = New-Object System.Windows.Forms.Label
 $lblReportStatus.Location = New-Object Drawing.Point(20,120)
 $lblReportStatus.AutoSize = $true
 
+$lblSummary = New-Object System.Windows.Forms.Label
+$lblSummary.Location = New-Object Drawing.Point(20,150)
+$lblSummary.AutoSize = $true
+$lblSummary.Font = New-Object System.Drawing.Font(
+    "Segoe UI",
+    9,
+    [System.Drawing.FontStyle]::Bold
+)
+
 $grpStatus.Controls.Add($lblSSMSStatus)
 $grpStatus.Controls.Add($lblVSStatus)
 $grpStatus.Controls.Add($lblCodeStatus)
 $grpStatus.Controls.Add($lblReportStatus)
+$grpStatus.Controls.Add($lblSummary)
+
+function Set-StatusLabel {
+
+    param(
+        [System.Windows.Forms.Label]$Label,
+        [string]$ApplicationName,
+        [string]$Path
+    )
+
+    if(
+        -not [string]::IsNullOrWhiteSpace($Path) `
+        -and
+        (Test-Path $Path)
+    ){
+
+        $Label.Text =
+            "[OK] " + $ApplicationName + " - Disponible"
+
+        $Label.ForeColor =
+            [System.Drawing.Color]::DarkGreen
+
+        return $true
+
+    }
+
+    $Label.Text =
+        "[ERROR] " + $ApplicationName + " - No encontrado"
+
+    $Label.ForeColor =
+        [System.Drawing.Color]::DarkRed
+
+    return $false
+
+}
 
 function RefreshAppStatus {
 
     $script:apps = Get-Applications
 
-    $lblSSMSStatus.Text =
-        "SSMS : " +
-        (Get-AppStatus $apps.SSMS)
+    $available = 0
 
-    $lblVSStatus.Text =
-        "Visual Studio : " +
-        (Get-AppStatus $apps.VisualStudio)
+    if(
+        Set-StatusLabel `
+            $lblSSMSStatus `
+            "SSMS" `
+            $apps.SSMS
+    ){
+        $available++
+    }
 
-    $lblCodeStatus.Text =
-        "VS Code : " +
-        (Get-AppStatus $apps.VSCode)
+    if(
+        Set-StatusLabel `
+            $lblVSStatus `
+            "Visual Studio" `
+            $apps.VisualStudio
+    ){
+        $available++
+    }
 
-    $lblReportStatus.Text =
-        "Report Builder : " +
-        (Get-AppStatus $apps.ReportBuilder)
+    if(
+        Set-StatusLabel `
+            $lblCodeStatus `
+            "VS Code" `
+            $apps.VSCode
+    ){
+        $available++
+    }
+
+    if(
+        Set-StatusLabel `
+            $lblReportStatus `
+            "Report Builder" `
+            $apps.ReportBuilder
+    ){
+        $available++
+    }
+
+    $lblSummary.Text =
+        "Disponibles: $available / 4"
+
+    if($available -eq 4){
+
+        $lblSummary.ForeColor =
+            [System.Drawing.Color]::DarkGreen
+
+    }
+    else{
+
+        $lblSummary.ForeColor =
+            [System.Drawing.Color]::DarkOrange
+
+    }
+
 }
 
 RefreshAppStatus
 
 $btnScan.Add_Click({
 
-    Scan-Applications | Out-Null
+    Invoke-Safely {
 
-    RefreshAppStatus
+        Scan-Applications | Out-Null
 
-    Show-Info "Escaneo completado."
+        RefreshAppStatus
+        RefreshDashboard
+
+        Show-Info "Escaneo completado."
+
+    }
 
 })
 
@@ -452,16 +707,10 @@ $form.Controls.Add($btnBAIS)
 
 $btnBAIS.Add_Click({
 
-    try{
+    Invoke-Safely {
 
         Start-ProjectProfile `
             "BAIS DEV"
-
-    }
-    catch{
-
-        Show-Error `
-            $_.Exception.Message
 
     }
 
@@ -473,7 +722,7 @@ $btnBAIS.Add_Click({
 
 $btnExit = New-Object System.Windows.Forms.Button
 $btnExit.Text = "Salir"
-$btnExit.Location = New-Object Drawing.Point(780,600)
+$btnExit.Location = New-Object Drawing.Point(780,720)
 $btnExit.Size = New-Object Drawing.Size(120,35)
 
 $btnExit.Add_Click({
@@ -490,18 +739,22 @@ $form.Controls.Add($btnExit)
 
 $form.Add_FormClosing({
 
-    $settings =
-        Get-JsonFile "settings.json"
+    Invoke-Safely {
 
-    $settings.selectedUser =
-        $cmbUser.Text
+        $settings =
+            Get-JsonFile "settings.json"
 
-    $settings.lastEnvironment =
-        Get-SelectedEnvironment
+        $settings.selectedUser =
+            $cmbUser.Text
 
-    Save-JsonFile `
-        "settings.json" `
-        $settings
+        $settings.lastEnvironment =
+            Get-SelectedEnvironment
+
+        Save-JsonFile `
+            "settings.json" `
+            $settings
+
+    }
 
 })
 
