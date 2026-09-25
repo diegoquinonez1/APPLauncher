@@ -24,9 +24,6 @@ else {
         -Parent
 
 }
-[System.Windows.Forms.MessageBox]::Show(
-"Root = $Root"
-)
 
 # ==================================
 # IMPORT MODULES
