@@ -1,46 +1,93 @@
 function Start-ProjectProfile {
 
     param(
-        [string]$ProjectName
+        [string]$ProjectName,
+        [psobject]$Project
     )
 
-    $projects = Get-Projects
+    if($null -eq $Project){
 
-    $project =
-        $projects.projects |
-        Where-Object {
-            $_.name -eq $ProjectName
-        } |
-        Select-Object -First 1
+        if([string]::IsNullOrWhiteSpace($ProjectName)){
+            throw "Debe especificar un proyecto."
+        }
 
-    if(!$project){
+        $matches = @(
+            (Get-Projects).projects |
+            Where-Object {
+                $_.name -eq $ProjectName
+            }
+        )
 
-        throw "Perfil no encontrado."
+        if($matches.Count -eq 0){
+            throw "Perfil no encontrado: $ProjectName"
+        }
+
+        if($matches.Count -gt 1){
+            throw "Hay varios perfiles con el nombre '$ProjectName'."
+        }
+
+        $Project = $matches[0]
     }
 
-    foreach($app in $project.startupApps){
+    if([string]::IsNullOrWhiteSpace([string]$Project.name)){
+        throw "El perfil no tiene nombre."
+    }
+
+    $startupApps = @(
+        $Project.startupApps |
+        Where-Object {
+            -not [string]::IsNullOrWhiteSpace([string]$_)
+        }
+    )
+
+    $solutionPath = [string]$Project.solution
+    $folderPath = [string]$Project.folder
+
+    if(
+        $startupApps.Count -eq 0 -and
+        [string]::IsNullOrWhiteSpace($solutionPath) -and
+        [string]::IsNullOrWhiteSpace($folderPath)
+    ){
+        throw "El perfil '$($Project.name)' no tiene aplicaciones, solución ni carpeta configuradas."
+    }
+
+    if($startupApps.Count -gt 0){
+
+        if([string]::IsNullOrWhiteSpace([string]$Project.environment)){
+            throw "El perfil '$($Project.name)' no tiene un entorno configurado."
+        }
+
+        if([string]::IsNullOrWhiteSpace([string]$Project.user)){
+            throw "El perfil '$($Project.name)' no tiene un usuario configurado."
+        }
+
+    }
+
+    foreach($app in $startupApps){
 
         Start-AONApplication `
             $app `
-            $project.environment `
-            $project.user
+            $Project.environment `
+            $Project.user
 
         Start-Sleep -Seconds 2
     }
 
-    if(
-        $project.solution -and
-        (Test-Path $project.solution)
-    ){
+    if(-not [string]::IsNullOrWhiteSpace($solutionPath)){
 
-        Start-Process $project.solution
+        if(!(Test-Path $solutionPath)){
+            throw "No existe la solución del perfil '$($Project.name)': $solutionPath"
+        }
+
+        Start-Process $solutionPath
     }
 
-    if(
-        $project.folder -and
-        (Test-Path $project.folder)
-    ){
+    if(-not [string]::IsNullOrWhiteSpace($folderPath)){
 
-        explorer.exe $project.folder
+        if(!(Test-Path $folderPath)){
+            throw "No existe la carpeta del perfil '$($Project.name)': $folderPath"
+        }
+
+        Start-Process explorer.exe -ArgumentList "`"$folderPath`""
     }
 }

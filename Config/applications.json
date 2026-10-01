@@ -1,7 +1,7 @@
 ﻿{
     "SSMS":  "C:\\Program Files\\Microsoft SQL Server Management Studio 22\\Release\\Common7\\IDE\\SSMS.exe",
-    "VisualStudio":  "C:\\Program Files\\Microsoft Visual Studio\\18\\Professional\\Common7\\IDE\\devenv.exe",
-    "VSCode":  "C:\\Users\\a0836618\\AppData\\Local\\Programs\\Microsoft VS Code\\Code.exe",
-    "ReportBuilder":  "C:\\Program Files\\Microsoft Report Builder\\MSReportBuilder.exe",
-    "LastScan":  "2026-09-30 11:02:34"
+    "VisualStudio":  "C:\\Program Files\\Microsoft Visual Studio\\18\\Community\\Common7\\IDE\\devenv.exe",
+    "VSCode":  "C:\\Program Files\\Microsoft VS Code\\Code.exe",
+    "ReportBuilder":  "",
+    "LastScan":  "2026-10-01 02:50:04"
 }

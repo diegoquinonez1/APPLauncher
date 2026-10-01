@@ -712,26 +712,67 @@ $btnScan.Add_Click({
 })
 
 # ==================================
-# BAIS
+# PROJECTS
 # ==================================
 
-$btnBAIS = New-Object System.Windows.Forms.Button
-$btnBAIS.Text = "Iniciar BAIS"
-$btnBAIS.Location = New-Object Drawing.Point(350,420)
-$btnBAIS.Size = New-Object Drawing.Size(430,70)
+$grpProjects = New-Object System.Windows.Forms.GroupBox
+$grpProjects.Text = "Proyectos"
+$grpProjects.Location = New-Object Drawing.Point(350,390)
+$grpProjects.Size = New-Object Drawing.Size(430,310)
 
-$form.Controls.Add($btnBAIS)
+$flowProjectButtons = New-Object System.Windows.Forms.FlowLayoutPanel
+$flowProjectButtons.Location = New-Object Drawing.Point(10,25)
+$flowProjectButtons.Size = New-Object Drawing.Size(400,270)
+$flowProjectButtons.AutoScroll = $true
+$flowProjectButtons.FlowDirection = "TopDown"
+$flowProjectButtons.WrapContents = $false
 
-$btnBAIS.Add_Click({
+$grpProjects.Controls.Add($flowProjectButtons)
+$form.Controls.Add($grpProjects)
 
-    Invoke-Safely {
+function Refresh-ProjectLauncher {
 
-        Start-ProjectProfile `
-            "BAIS DEV"
+    $flowProjectButtons.Controls.Clear()
+    $projectDefinitions = @((Get-Projects).projects)
+
+    foreach($project in $projectDefinitions){
+
+        if(
+            $null -eq $project -or
+            [string]::IsNullOrWhiteSpace([string]$project.name)
+        ){
+            continue
+        }
+
+        $projectButton = New-Object System.Windows.Forms.Button
+        $projectButton.Text = [string]$project.name
+        $projectButton.Tag = $project
+        $projectButton.Size = New-Object Drawing.Size(370,42)
+
+        $projectButton.Add_Click({
+            param($sender, $eventArgs)
+
+            Invoke-Safely {
+                Start-ProjectProfile -Project $sender.Tag
+            }
+        })
+
+        $flowProjectButtons.Controls.Add($projectButton)
 
     }
 
-})
+    if($flowProjectButtons.Controls.Count -eq 0){
+
+        $emptyProjectsLabel = New-Object System.Windows.Forms.Label
+        $emptyProjectsLabel.Text = "No hay proyectos configurados."
+        $emptyProjectsLabel.AutoSize = $true
+        $flowProjectButtons.Controls.Add($emptyProjectsLabel)
+
+    }
+
+}
+
+Refresh-ProjectLauncher
 
 # ==================================
 # EXIT

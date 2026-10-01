@@ -108,27 +108,32 @@ Se mantiene el uso de `RUNAS /NETONLY` sin comprometer la compatibilidad del flu
 Eliminar dependencias de código para administrar proyectos y convertir el Launcher en una plataforma configurable.
 
 ### Prioridad 1: Dynamic Project Launcher
-#### Situación actual
-Actualmente existe un botón fijo de “Iniciar BAIS” hardcodeado dentro del Launcher.
+#### Estado: ✅ Implementado en Sprint 1
 
-#### Objetivo
-Generar automáticamente los accesos a proyectos desde `projects.json`.
+El Launcher genera un botón por cada proyecto de `Config/projects.json`. Al seleccionar uno, inicia únicamente el perfil asociado al botón, con sus aplicaciones, entorno, usuario, solución y carpeta configurados. Una configuración vacía muestra un estado vacío; perfiles incompletos o rutas inválidas producen un error visible.
 
 #### Ejemplo
 ```json
 {
   "projects": [
-    { "name": "BAIS DEV" },
-    { "name": "BAIS QC" },
-    { "name": "BAIS PROD" }
+    {
+      "name": "BAIS DEV",
+      "environment": "DEV",
+      "user": "adm-A0836618",
+      "startupApps": ["SSMS", "VisualStudio", "VSCode"],
+      "solution": "",
+      "folder": ""
+    }
   ]
 }
 ```
 
+Para perfiles con `startupApps`, también se deben indicar `environment` y `user`. Cada perfil debe configurar al menos una aplicación, una solución o una carpeta; las rutas configuradas deben existir.
+
 #### Beneficios
-- No modificar `Launcher.ps1`.
-- Agregar proyectos solo mediante configuración.
-- Escalabilidad para nuevos equipos.
+- Agregar proyectos desde configuración sin modificar `Launcher.ps1`.
+- Mantener definiciones separadas por entorno y equipo.
+- Facilitar la incorporación de nuevos equipos.
 
 ### Prioridad 2: Project Manager
 #### Nuevo formulario

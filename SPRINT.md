@@ -12,6 +12,30 @@ La evolución del Launcher se organizó en sprints secuenciales para entregar fu
 - Generación dinámica de proyectos desde configuración.
 - Preparación para soportar múltiples entornos y equipos.
 
+### Flujo implementado
+- Al iniciar, el Launcher lee `Config/projects.json` y genera un botón por cada proyecto válido.
+- Cada botón ejecuta el perfil seleccionado, incluyendo sus aplicaciones de inicio, solución y carpeta configuradas.
+- La lista admite cualquier cantidad de proyectos y muestra un estado vacío cuando no hay proyectos configurados.
+- Los perfiles sin acciones, sin entorno o usuario requeridos, con nombres ambiguos o con rutas inexistentes se reportan como errores.
+
+### Configuración de un perfil ejecutable
+```json
+{
+	"projects": [
+		{
+			"name": "BAIS DEV",
+			"environment": "DEV",
+			"user": "adm-A0836618",
+			"startupApps": ["SSMS", "VisualStudio", "VSCode"],
+			"solution": "",
+			"folder": ""
+		}
+	]
+}
+```
+
+`name` es obligatorio. Para iniciar `startupApps` también se requieren `environment` y `user`; `solution` y `folder` son opcionales, pero cuando se configuran sus rutas deben existir. Un perfil debe incluir al menos una aplicación, una solución o una carpeta.
+
 ---
 
 ## Sprint 2
