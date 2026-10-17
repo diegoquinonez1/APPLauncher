@@ -40,6 +40,7 @@ else {
 . "$Root\Modules\UiHelpers.ps1"
 . "$Root\Modules\ProfileManager.ps1"
 . "$Root\Modules\ProjectLauncher.ps1"
+. "$Root\Modules\ProjectsForm.ps1"
 . "$Root\Modules\UsersForm.ps1"
 . "$Root\Modules\CredentialForm.ps1"
 . "$Root\Modules\FavoriteForm.ps1"
@@ -493,6 +494,24 @@ $btnCreds.Add_Click({
 })
 
 $form.Controls.Add($btnCreds)
+
+$btnProjectsManager = New-Object System.Windows.Forms.Button
+$btnProjectsManager.Text = "Proyectos"
+$btnProjectsManager.Location = New-Object Drawing.Point(350,335)
+$btnProjectsManager.Size = New-Object Drawing.Size(200,40)
+
+$btnProjectsManager.Add_Click({
+
+    Invoke-Safely {
+
+        Show-ProjectsForm
+        Refresh-ProjectLauncher
+
+    }
+
+})
+
+$form.Controls.Add($btnProjectsManager)
 
 $btnFav = New-Object System.Windows.Forms.Button
 

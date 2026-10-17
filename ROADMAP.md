@@ -136,8 +136,9 @@ Para perfiles con `startupApps`, también se deben indicar `environment` y `user
 - Facilitar la incorporación de nuevos equipos.
 
 ### Prioridad 2: Project Manager
-#### Nuevo formulario
-Administración de Proyectos
+#### Estado: ✅ Implementado en Sprint 2
+
+Administración visual de Proyectos.
 
 #### Funcionalidades
 - Crear proyecto
@@ -148,6 +149,8 @@ Administración de Proyectos
 - Editar proyecto
 - Eliminar proyecto
 - Configurar aplicaciones de inicio
+
+El formulario queda accesible desde la pantalla principal y actualiza la lista de proyectos del launcher de forma inmediata tras guardar o borrar un registro.
 
 #### Ejemplo de aplicaciones
 - Visual Studio

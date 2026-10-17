@@ -44,6 +44,28 @@ La evolución del Launcher se organizó en sprints secuenciales para entregar fu
 - Creación, edición y eliminación de proyectos.
 - Configuración de soluciones, rutas y aplicaciones asociadas.
 
+### Flujo implementado
+- Se agregó un botón de gestión de proyectos desde la pantalla principal.
+- El formulario permite listar los perfiles activos, crear uno nuevo, editar el seleccionado y eliminarlo.
+- Cada proyecto guarda nombre, entorno, usuario, solución, carpeta y aplicaciones de inicio.
+- Al guardar o eliminar un proyecto, la lista principal del launcher se refresca automáticamente para reflejar los cambios.
+
+### Estructura del proyecto
+```json
+{
+  "projects": [
+    {
+      "name": "BAIS DEV",
+      "environment": "DEV",
+      "user": "adm-A0836618",
+      "solution": "C:\\ruta\\solucion.sln",
+      "folder": "C:\\ruta\\proyecto",
+      "startupApps": ["SSMS", "VisualStudio", "VSCode"]
+    }
+  ]
+}
+```
+
 ---
 
 ## Sprint 3
