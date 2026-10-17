@@ -1,18 +1,28 @@
 ﻿{
-  "projects": [
-    {
-      "name": "BAIS DEV",
-      "environment": "DEV",
-      "user": "adm-A0836618",
-      "solution": "",
-      "folder": "",
-      "startupApps": [
-        "SSMS",
-        "VisualStudio",
-        "VSCode"
-      ]
-    }
-  ]
+    "projects":  [
+                     {
+                         "name":  "BAIS DEV",
+                         "environment":  "DEV",
+                         "user":  "adm-A0836618",
+                         "solution":  "",
+                         "folder":  "",
+                         "startupApps":  [
+                                             "SSMS",
+                                             "VisualStudio",
+                                             "VSCode"
+                                         ]
+                     },
+                     {
+                         "name":  "BAIS PROD",
+                         "environment":  "PROD",
+                         "user":  "adm-A0836618",
+                         "solution":  "",
+                         "folder":  "",
+                         "startupApps":  [
+                                             "SSMS",
+                                             "VisualStudio",
+                                             "VSCode"
+                                         ]
+                     }
+                 ]
 }
-
-

@@ -62,12 +62,19 @@ $users = Get-Users
 
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "AON Launcher V4.1"
-$form.MinimumSize =
-New-Object Drawing.Size(950,800)
-$form.Width = 950
-$form.Height = 800
+$screenArea = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
+$form.AutoScroll = $true
+$form.AutoScrollMinSize = New-Object Drawing.Size(920,800)
+$form.MinimumSize = New-Object Drawing.Size(
+    [Math]::Min(950, $screenArea.Width),
+    [Math]::Min(600, $screenArea.Height)
+)
+$form.Size = New-Object Drawing.Size(
+    [Math]::Min(950, $screenArea.Width),
+    [Math]::Min(800, $screenArea.Height)
+)
 $form.StartPosition = "CenterScreen"
-$form.MaximizeBox = $false
+$form.MaximizeBox = $true
 
 # ==================================
 # USER
@@ -572,10 +579,8 @@ function Get-AppStatus {
 
 $btnScan = New-Object System.Windows.Forms.Button
 $btnScan.Text = "Reescanear"
-$btnScan.Location = New-Object Drawing.Point(350,535)
-$btnScan.Size = New-Object Drawing.Size(430,40)
-
-$form.Controls.Add($btnScan)
+$btnScan.Location = New-Object Drawing.Point(20,180)
+$btnScan.Size = New-Object Drawing.Size(240,32)
 
 # ==================================
 # STATUS
@@ -584,7 +589,7 @@ $form.Controls.Add($btnScan)
 $grpStatus = New-Object System.Windows.Forms.GroupBox
 $grpStatus.Text = "Estado de Aplicaciones"
 $grpStatus.Location = New-Object Drawing.Point(20,520)
-$grpStatus.Size = New-Object Drawing.Size(280,220)
+$grpStatus.Size = New-Object Drawing.Size(280,260)
 
 $form.Controls.Add($grpStatus)
 
@@ -618,6 +623,7 @@ $grpStatus.Controls.Add($lblVSStatus)
 $grpStatus.Controls.Add($lblCodeStatus)
 $grpStatus.Controls.Add($lblReportStatus)
 $grpStatus.Controls.Add($lblSummary)
+$grpStatus.Controls.Add($btnScan)
 
 function Set-StatusLabel {
 
@@ -738,13 +744,40 @@ $grpProjects = New-Object System.Windows.Forms.GroupBox
 $grpProjects.Text = "Proyectos"
 $grpProjects.Location = New-Object Drawing.Point(350,390)
 $grpProjects.Size = New-Object Drawing.Size(430,310)
+$grpProjects.Anchor = (
+    [System.Windows.Forms.AnchorStyles]::Top -bor
+    [System.Windows.Forms.AnchorStyles]::Bottom -bor
+    [System.Windows.Forms.AnchorStyles]::Left -bor
+    [System.Windows.Forms.AnchorStyles]::Right
+)
 
 $flowProjectButtons = New-Object System.Windows.Forms.FlowLayoutPanel
 $flowProjectButtons.Location = New-Object Drawing.Point(10,25)
 $flowProjectButtons.Size = New-Object Drawing.Size(400,270)
+$flowProjectButtons.Anchor = (
+    [System.Windows.Forms.AnchorStyles]::Top -bor
+    [System.Windows.Forms.AnchorStyles]::Bottom -bor
+    [System.Windows.Forms.AnchorStyles]::Left -bor
+    [System.Windows.Forms.AnchorStyles]::Right
+)
 $flowProjectButtons.AutoScroll = $true
 $flowProjectButtons.FlowDirection = "TopDown"
 $flowProjectButtons.WrapContents = $false
+
+$flowProjectButtons.Add_SizeChanged({
+
+    $buttonWidth = [Math]::Max(
+        120,
+        $flowProjectButtons.ClientSize.Width - 28
+    )
+
+    foreach($button in $flowProjectButtons.Controls){
+        if($button -is [System.Windows.Forms.Button]){
+            $button.Width = $buttonWidth
+        }
+    }
+
+})
 
 $grpProjects.Controls.Add($flowProjectButtons)
 $form.Controls.Add($grpProjects)
@@ -766,7 +799,10 @@ function Refresh-ProjectLauncher {
         $projectButton = New-Object System.Windows.Forms.Button
         $projectButton.Text = [string]$project.name
         $projectButton.Tag = $project
-        $projectButton.Size = New-Object Drawing.Size(370,42)
+        $projectButton.Size = New-Object Drawing.Size(
+            [Math]::Max(120, $flowProjectButtons.ClientSize.Width - 28),
+            42
+        )
 
         $projectButton.Add_Click({
             param($sender, $eventArgs)
@@ -801,6 +837,10 @@ $btnExit = New-Object System.Windows.Forms.Button
 $btnExit.Text = "Salir"
 $btnExit.Location = New-Object Drawing.Point(780,720)
 $btnExit.Size = New-Object Drawing.Size(120,35)
+$btnExit.Anchor = (
+    [System.Windows.Forms.AnchorStyles]::Bottom -bor
+    [System.Windows.Forms.AnchorStyles]::Right
+)
 
 $btnExit.Add_Click({
 
