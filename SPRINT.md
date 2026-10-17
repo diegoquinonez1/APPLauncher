@@ -75,6 +75,14 @@ La evolución del Launcher se organizó en sprints secuenciales para entregar fu
 - Métricas por aplicación y proyecto.
 - Base para reportes operativos.
 
+### Implementación
+- El dashboard muestra la última aplicación y el último proyecto iniciados, ambos con fecha y hora.
+- Presenta la aplicación y el proyecto más utilizados, junto con sus cantidades, además de las aperturas de aplicaciones del día y del mes actual.
+- `launcher.log` conserva los registros de aplicación existentes y agrega eventos `PROJECT` para los perfiles ejecutados desde el Launcher.
+- Los logs anteriores no identificaban el perfil ejecutado, por lo que las métricas históricas de proyectos no se pueden reconstruir y comienzan con los nuevos eventos.
+- Las aperturas de aplicaciones iniciadas como parte de un proyecto se cuentan como ejecuciones de aplicación; el evento de proyecto se usa para las métricas de proyectos y no duplica los totales diarios/mensuales.
+- Los indicadores se refrescan después de iniciar aplicaciones o proyectos y al completar un escaneo.
+
 ---
 
 ## Sprint 4

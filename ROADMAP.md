@@ -178,6 +178,15 @@ El formulario queda accesible desde la pantalla principal y actualiza la lista d
 #### Fuente de información
 Utilización de `launcher.log` como origen de métricas.
 
+#### Estado: ✅ Implementado
+- Actividad reciente: última aplicación ejecutada y último proyecto iniciado, con fecha y hora.
+- Uso: aplicación y proyecto más utilizados, con su cantidad de ejecuciones.
+- Consumo: aperturas de aplicaciones del día y del mes actual.
+- Las aperturas de aplicaciones iniciadas desde un perfil cuentan como ejecuciones de aplicación; el inicio de proyecto se registra por separado para evitar duplicar esos totales.
+- Lee los registros de aplicación existentes. Los proyectos iniciados a partir de esta versión generan eventos `PROJECT` en `launcher.log`.
+- Los logs históricos no identificaban el perfil ejecutado; las métricas de proyecto comienzan con la incorporación de esos eventos.
+- Los indicadores se actualizan al iniciar aplicaciones, ejecutar proyectos y volver a escanear.
+
 ### Prioridad 4: Accesos corporativos
 #### Nuevo módulo
 Accesos Rápidos

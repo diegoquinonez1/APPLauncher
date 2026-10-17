@@ -64,7 +64,7 @@ $form = New-Object System.Windows.Forms.Form
 $form.Text = "AON Launcher V4.1"
 $screenArea = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
 $form.AutoScroll = $true
-$form.AutoScrollMinSize = New-Object Drawing.Size(920,800)
+$form.AutoScrollMinSize = New-Object Drawing.Size(920,940)
 $form.MinimumSize = New-Object Drawing.Size(
     [Math]::Min(950, $screenArea.Width),
     [Math]::Min(600, $screenArea.Height)
@@ -212,7 +212,13 @@ function RefreshDashboard {
         $null -eq $lblDashApps -or
         $null -eq $lblDashProjects -or
         $null -eq $lblDashFav -or
-        $null -eq $lblDashScan
+        $null -eq $lblDashScan -or
+        $null -eq $lblDashLastApp -or
+        $null -eq $lblDashLastProject -or
+        $null -eq $lblDashTopApp -or
+        $null -eq $lblDashTopProject -or
+        $null -eq $lblDashToday -or
+        $null -eq $lblDashMonth
     ){
         return
     }
@@ -224,6 +230,8 @@ function RefreshDashboard {
 
     $favorites =
         (Get-Favorites).favorites
+
+    $metrics = Get-LauncherDashboardMetrics
 
     $appCount = 0
 
@@ -270,6 +278,37 @@ function RefreshDashboard {
         "Último escaneo: " +
         $apps.LastScan
 
+    $lblDashLastApp.Text = "Última aplicación: Sin registros"
+    if($null -ne $metrics.LatestApplication){
+        $lblDashLastApp.Text = "Última aplicación: {0} ({1})" -f `
+            $metrics.LatestApplication.Name,
+            $metrics.LatestApplication.Timestamp.ToString("dd/MM HH:mm")
+    }
+
+    $lblDashLastProject.Text = "Último proyecto: Sin registros"
+    if($null -ne $metrics.LatestProject){
+        $lblDashLastProject.Text = "Último proyecto: {0} ({1})" -f `
+            $metrics.LatestProject.Name,
+            $metrics.LatestProject.Timestamp.ToString("dd/MM HH:mm")
+    }
+
+    $lblDashTopApp.Text = "Aplicación más usada: Sin registros"
+    if($null -ne $metrics.MostUsedApplication){
+        $lblDashTopApp.Text = "Aplicación más usada: {0} ({1})" -f `
+            $metrics.MostUsedApplication.Name,
+            $metrics.MostUsedApplication.Count
+    }
+
+    $lblDashTopProject.Text = "Proyecto más usado: Sin registros"
+    if($null -ne $metrics.MostUsedProject){
+        $lblDashTopProject.Text = "Proyecto más usado: {0} ({1})" -f `
+            $metrics.MostUsedProject.Name,
+            $metrics.MostUsedProject.Count
+    }
+
+    $lblDashToday.Text = "Ejecuciones de apps hoy: $($metrics.ExecutionsToday)"
+    $lblDashMonth.Text = "Ejecuciones de apps este mes: $($metrics.ExecutionsThisMonth)"
+
 }
 
 function RefreshTheme {
@@ -312,7 +351,7 @@ $grpDashboard.Location =
     New-Object Drawing.Point(20,280)
 
 $grpDashboard.Size =
-    New-Object Drawing.Size(280,220)
+    New-Object Drawing.Size(280,370)
 
 $form.Controls.Add($grpDashboard)
 
@@ -388,6 +427,31 @@ $grpDashboard.Controls.Add(
     $lblDashScan
 )
 
+$lblDashLastApp = New-Object System.Windows.Forms.Label
+$lblDashLastProject = New-Object System.Windows.Forms.Label
+$lblDashTopApp = New-Object System.Windows.Forms.Label
+$lblDashTopProject = New-Object System.Windows.Forms.Label
+$lblDashToday = New-Object System.Windows.Forms.Label
+$lblDashMonth = New-Object System.Windows.Forms.Label
+$dashboardMetricLabels = @(
+    $lblDashLastApp,
+    $lblDashLastProject,
+    $lblDashTopApp,
+    $lblDashTopProject,
+    $lblDashToday,
+    $lblDashMonth
+)
+
+for($index = 0; $index -lt $dashboardMetricLabels.Count; $index++){
+    $dashboardMetricLabels[$index].Location = New-Object Drawing.Point(
+        20,
+        (210 + ($index * 24))
+    )
+    $dashboardMetricLabels[$index].Size = New-Object Drawing.Size(240,22)
+    $dashboardMetricLabels[$index].AutoEllipsis = $true
+    $grpDashboard.Controls.Add($dashboardMetricLabels[$index])
+}
+
 RefreshDashboard
 
 # ==================================
@@ -407,6 +471,8 @@ $btnSSMS.Add_Click({
             "SSMS" `
             (Get-SelectedEnvironment) `
             $cmbUser.Text
+
+        RefreshDashboard
 
     }
 
@@ -430,6 +496,8 @@ $btnVS.Add_Click({
             (Get-SelectedEnvironment) `
             $cmbUser.Text
 
+        RefreshDashboard
+
     }
 
 })
@@ -452,6 +520,8 @@ $btnCode.Add_Click({
             (Get-SelectedEnvironment) `
             $cmbUser.Text
 
+        RefreshDashboard
+
     }
 
 })
@@ -473,6 +543,8 @@ $btnReport.Add_Click({
             "ReportBuilder" `
             (Get-SelectedEnvironment) `
             $cmbUser.Text
+
+        RefreshDashboard
 
     }
 
@@ -588,7 +660,7 @@ $btnScan.Size = New-Object Drawing.Size(240,32)
 
 $grpStatus = New-Object System.Windows.Forms.GroupBox
 $grpStatus.Text = "Estado de Aplicaciones"
-$grpStatus.Location = New-Object Drawing.Point(20,520)
+$grpStatus.Location = New-Object Drawing.Point(20,660)
 $grpStatus.Size = New-Object Drawing.Size(280,260)
 
 $form.Controls.Add($grpStatus)
@@ -809,6 +881,7 @@ function Refresh-ProjectLauncher {
 
             Invoke-Safely {
                 Start-ProjectProfile -Project $sender.Tag
+                RefreshDashboard
             }
         })
 

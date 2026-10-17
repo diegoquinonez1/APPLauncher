@@ -90,4 +90,9 @@ function Start-ProjectProfile {
 
         Start-Process explorer.exe -ArgumentList "`"$folderPath`""
     }
+
+    Write-ProjectLog `
+        $Project.environment `
+        $Project.user `
+        $Project.name
 }
