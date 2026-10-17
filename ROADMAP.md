@@ -229,8 +229,8 @@ El Launcher abre cada destino en el navegador predeterminado y crea `links.json`
 
 ## 🚀 V4.3 - Expiración automática de credenciales
 
-### Estado actual
-Actualmente se registra un campo como:
+### Estado: ✅ Implementado en Sprint 5
+Cada credencial conserva `updatedAt` en formato ISO local, por ejemplo:
 
 ```json
 {
@@ -238,26 +238,23 @@ Actualmente se registra un campo como:
 }
 ```
 
-### Objetivo
-Implementar expiración automática de credenciales a 8 horas.
+La vigencia se calcula desde ese campo y vence a las 8 horas. Guardar una contraseña nueva actualiza la fecha y reinicia el período.
 
 ### Estados
-- Válida
-- Próxima a expirar
-- Expirada
+- **Válida:** queda más de una hora antes del vencimiento.
+- **Próxima a expirar:** queda una hora o menos, sin haber vencido.
+- **Expirada:** se alcanzó `updatedAt + 8 horas`; fechas ausentes o inválidas también se consideran expiradas.
+- **No configurada:** no hay credencial para el usuario y entorno.
 
 ### Dashboard de credenciales
-Visualización esperada:
-- DEV → Válida
-- QC → Válida
-- PROD → Expirada
+El dashboard principal presenta el estado de DEV, QC y PROD para el usuario seleccionado. El formulario también permite verificar el estado de la credencial del entorno elegido.
 
 ### Beneficios
 - Mayor visibilidad.
 - Menor riesgo operativo.
 
 ### Limpieza automática
-Eliminar credenciales expiradas del repositorio local.
+Las credenciales expiradas se eliminan de `Config/credentials.json` al iniciar el Launcher, cada minuto mientras permanece abierto, al verificarlas, al intentar utilizarlas o al guardar una credencial. Una credencial expirada no se devuelve ni se copia al portapapeles. El dashboard mantiene el estado expirado durante la sesión usando únicamente metadatos en memoria, sin conservar el secreto.
 
 #### Regla
 `updatedAt + 8 horas`

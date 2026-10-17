@@ -124,9 +124,13 @@ La evolución del Launcher se organizó en sprints secuenciales para entregar fu
 
 ## Sprint 5
 ### ✅ Expiración de Credenciales
-- Control de vigencia por entorno.
-- Estados de credencial: válida, próxima a expirar y expirada.
-- Limpieza automática para reducir riesgo operativo.
+- Vigencia calculada desde `updatedAt`: la credencial expira a las 8 horas.
+- Estados por entorno para el usuario seleccionado: válida, próxima a expirar (última hora), expirada o no configurada.
+- El dashboard principal muestra el estado de DEV, QC y PROD, y se actualiza al cambiar el usuario o volver desde el gestor de credenciales.
+- El formulario de credenciales permite verificar el estado; las credenciales expiradas no se consideran utilizables.
+- Las credenciales expiradas se eliminan al iniciar el Launcher y cada minuto mientras está abierto, además de al verificarlas, intentar usarlas o guardar una credencial. Las fechas ausentes o inválidas se consideran expiradas.
+- El dashboard mantiene el estado "Expirada" durante la sesión después de eliminar el secreto; el marcador solo conserva usuario, entorno y fecha de vencimiento en memoria.
+- Guardar nuevamente una credencial actualiza `updatedAt` y reinicia su período de vigencia.
 
 ---
 
@@ -152,4 +156,4 @@ La evolución del Launcher se organizó en sprints secuenciales para entregar fu
 ## Estado
 - Producto estable
 - Listo para uso diario
-- Base preparada para evolución hacia V4.2
+- Sprints 1 a 5 implementados

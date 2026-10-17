@@ -52,6 +52,7 @@ else {
 # ==================================
 
 $settings = Get-JsonFile "settings.json"
+Remove-ExpiredLauncherCredentials | Out-Null
 
 Scan-Applications | Out-Null
 
@@ -220,7 +221,10 @@ function RefreshDashboard {
         $null -eq $lblDashTopApp -or
         $null -eq $lblDashTopProject -or
         $null -eq $lblDashToday -or
-        $null -eq $lblDashMonth
+        $null -eq $lblDashMonth -or
+        $null -eq $lblDashCredentialDev -or
+        $null -eq $lblDashCredentialQc -or
+        $null -eq $lblDashCredentialProd
     ){
         return
     }
@@ -311,6 +315,10 @@ function RefreshDashboard {
     $lblDashToday.Text = "Ejecuciones de apps hoy: $($metrics.ExecutionsToday)"
     $lblDashMonth.Text = "Ejecuciones de apps este mes: $($metrics.ExecutionsThisMonth)"
 
+    $lblDashCredentialDev.Text = "Credencial DEV: " + (Get-LauncherCredentialStatus "DEV" $cmbUser.Text).Status
+    $lblDashCredentialQc.Text = "Credencial QC: " + (Get-LauncherCredentialStatus "QC" $cmbUser.Text).Status
+    $lblDashCredentialProd.Text = "Credencial PROD: " + (Get-LauncherCredentialStatus "PROD" $cmbUser.Text).Status
+
 }
 
 function RefreshTheme {
@@ -353,7 +361,7 @@ $grpDashboard.Location =
     New-Object Drawing.Point(20,280)
 
 $grpDashboard.Size =
-    New-Object Drawing.Size(280,370)
+    New-Object Drawing.Size(280,450)
 
 $form.Controls.Add($grpDashboard)
 
@@ -452,6 +460,25 @@ for($index = 0; $index -lt $dashboardMetricLabels.Count; $index++){
     $dashboardMetricLabels[$index].Size = New-Object Drawing.Size(240,22)
     $dashboardMetricLabels[$index].AutoEllipsis = $true
     $grpDashboard.Controls.Add($dashboardMetricLabels[$index])
+}
+
+$lblDashCredentialDev = New-Object System.Windows.Forms.Label
+$lblDashCredentialQc = New-Object System.Windows.Forms.Label
+$lblDashCredentialProd = New-Object System.Windows.Forms.Label
+$credentialStatusLabels = @(
+    $lblDashCredentialDev,
+    $lblDashCredentialQc,
+    $lblDashCredentialProd
+)
+
+for($index = 0; $index -lt $credentialStatusLabels.Count; $index++){
+    $credentialStatusLabels[$index].Location = New-Object Drawing.Point(
+        20,
+        (360 + ($index * 24))
+    )
+    $credentialStatusLabels[$index].Size = New-Object Drawing.Size(240,22)
+    $credentialStatusLabels[$index].AutoEllipsis = $true
+    $grpDashboard.Controls.Add($credentialStatusLabels[$index])
 }
 
 RefreshDashboard
@@ -568,7 +595,10 @@ $btnCreds.Add_Click({
     Invoke-Safely {
 
         Show-CredentialForm `
-            (Get-Users).users
+            (Get-Users).users `
+            $form
+
+        RefreshDashboard
 
     }
 
@@ -1046,6 +1076,27 @@ $form.Add_FormClosing({
     }
 
 })
+
+$credentialCleanupTimer = New-Object System.Windows.Forms.Timer
+$credentialCleanupTimer.Interval = 60000
+$credentialCleanupTimer.Add_Tick({
+
+    $removedCredentials = Remove-ExpiredLauncherCredentials
+
+    if($removedCredentials -gt 0){
+
+        RefreshDashboard
+
+    }
+
+})
+$form.Add_FormClosed({
+
+    $credentialCleanupTimer.Stop()
+    $credentialCleanupTimer.Dispose()
+
+})
+$credentialCleanupTimer.Start()
 
 # ==================================
 # SHOW

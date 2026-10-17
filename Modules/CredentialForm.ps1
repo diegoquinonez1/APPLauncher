@@ -1,7 +1,8 @@
 ﻿function Show-CredentialForm {
 
     param(
-        [string[]]$Users
+        [string[]]$Users,
+        [System.Windows.Forms.IWin32Window]$Owner
     )
 
     $formCred = New-Object System.Windows.Forms.Form
@@ -191,21 +192,17 @@
 
         try{
 
-            $exists =
-                Test-LauncherCredential `
+            $credentialStatus =
+                Get-LauncherCredentialStatus `
                     $cmbEnv.Text `
                     $cmbUser.Text
 
-            if($exists){
+            $lblStatus.Text =
+                "Estado: " + $credentialStatus.Status
 
-                $lblStatus.Text =
-                    "Estado: Configurada"
+            if($credentialStatus.Status -eq "Expirada"){
 
-            }
-            else{
-
-                $lblStatus.Text =
-                    "Estado: No encontrada"
+                Remove-ExpiredLauncherCredentials | Out-Null
 
             }
 
@@ -323,6 +320,15 @@ Se eliminará automáticamente en 60 segundos.
     # SHOW
     # ==================================
 
-    [void]$formCred.ShowDialog()
+    if($Owner){
+
+        [void]$formCred.ShowDialog($Owner)
+
+    }
+    else{
+
+        [void]$formCred.ShowDialog()
+
+    }
 
 }
