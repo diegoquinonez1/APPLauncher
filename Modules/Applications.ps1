@@ -1,4 +1,4 @@
-function Find-SSMS {
+﻿function Find-SSMS {
 
     Get-ChildItem `
         "C:\Program Files*" `

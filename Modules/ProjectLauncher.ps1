@@ -1,4 +1,4 @@
-function Start-ProjectProfile {
+﻿function Start-ProjectProfile {
 
     param(
         [string]$ProjectName,

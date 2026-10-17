@@ -1,4 +1,4 @@
-function Show-CredentialForm {
+﻿function Show-CredentialForm {
 
     param(
         [string[]]$Users

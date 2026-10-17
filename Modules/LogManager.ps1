@@ -1,4 +1,4 @@
-$Global:LogFile = Join-Path `
+﻿$Global:LogFile = Join-Path `
     $PSScriptRoot `
     "..\Logs\launcher.log"
 

@@ -1,4 +1,4 @@
-function Show-FavoriteForm {
+﻿function Show-FavoriteForm {
 
     $formFav = New-Object System.Windows.Forms.Form
 

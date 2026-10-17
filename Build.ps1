@@ -1,4 +1,4 @@
-Install-Module ps2exe `
+﻿Install-Module ps2exe `
     -Scope CurrentUser `
     -Force
 

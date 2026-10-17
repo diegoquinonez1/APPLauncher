@@ -1,4 +1,4 @@
-function Get-Projects {
+﻿function Get-Projects {
 
     Get-JsonFile "projects.json"
 }

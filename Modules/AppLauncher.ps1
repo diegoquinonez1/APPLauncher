@@ -1,4 +1,4 @@
-function Get-DomainByEnvironment {
+﻿function Get-DomainByEnvironment {
 
     param(
         [string]$Environment

@@ -1,4 +1,4 @@
-$Global:ConfigFolder = Join-Path $PSScriptRoot "..\Config"
+﻿$Global:ConfigFolder = Join-Path $PSScriptRoot "..\Config"
 $Global:BackupFolder = Join-Path $PSScriptRoot "..\Backups"
 $Global:LogFolder = Join-Path $PSScriptRoot "..\Logs"
 

@@ -1,4 +1,4 @@
-function Get-Credentials {
+﻿function Get-Credentials {
 
     Get-JsonFile "credentials.json"
 

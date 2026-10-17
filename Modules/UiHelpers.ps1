@@ -1,4 +1,4 @@
-function Show-Info {
+﻿function Show-Info {
 
     param(
         [string]$Message

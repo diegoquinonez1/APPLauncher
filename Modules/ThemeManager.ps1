@@ -1,4 +1,4 @@
-function Set-EnvironmentTheme {
+﻿function Set-EnvironmentTheme {
 
     param(
         [System.Windows.Forms.Form]$Form,

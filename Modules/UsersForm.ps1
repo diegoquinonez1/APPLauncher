@@ -1,4 +1,4 @@
-function Show-UsersForm {
+﻿function Show-UsersForm {
 
     param(
         [System.Windows.Forms.ComboBox]$MainUserCombo

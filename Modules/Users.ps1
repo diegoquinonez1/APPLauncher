@@ -1,4 +1,4 @@
-function Get-Users {
+﻿function Get-Users {
 
     $file = Join-Path $PSScriptRoot "..\Config\users.json"
 

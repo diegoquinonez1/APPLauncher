@@ -1,4 +1,4 @@
-function Get-Applications {
+﻿function Get-Applications {
 
     Get-JsonFile "applications.json"
 }

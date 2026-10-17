@@ -1,4 +1,4 @@
-function Get-Users {
+﻿function Get-Users {
 
     return Get-JsonFile "users.json"
 }

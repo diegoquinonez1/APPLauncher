@@ -1,4 +1,4 @@
-function Show-ProjectsForm {
+﻿function Show-ProjectsForm {
 
     $formProjects = New-Object System.Windows.Forms.Form
     $formProjects.Text = "Administración de Proyectos"

@@ -1,4 +1,4 @@
-function Get-Favorites {
+﻿function Get-Favorites {
 
     Get-JsonFile "favorites.json"
 }
