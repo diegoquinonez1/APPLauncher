@@ -35,6 +35,7 @@ else {
 . "$Root\Modules\ApplicationManager.ps1"
 . "$Root\Modules\CredentialManager.ps1"
 . "$Root\Modules\FavoriteManager.ps1"
+. "$Root\Modules\QuickLinks.ps1"
 . "$Root\Modules\AppLauncher.ps1"
 . "$Root\Modules\ThemeManager.ps1"
 . "$Root\Modules\UiHelpers.ps1"
@@ -44,6 +45,7 @@ else {
 . "$Root\Modules\UsersForm.ps1"
 . "$Root\Modules\CredentialForm.ps1"
 . "$Root\Modules\FavoriteForm.ps1"
+. "$Root\Modules\QuickLinksForm.ps1"
 
 # ==================================
 # LOAD DATA
@@ -64,7 +66,7 @@ $form = New-Object System.Windows.Forms.Form
 $form.Text = "AON Launcher V4.1"
 $screenArea = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
 $form.AutoScroll = $true
-$form.AutoScrollMinSize = New-Object Drawing.Size(920,940)
+$form.AutoScrollMinSize = New-Object Drawing.Size(920,960)
 $form.MinimumSize = New-Object Drawing.Size(
     [Math]::Min(950, $screenArea.Width),
     [Math]::Min(600, $screenArea.Height)
@@ -901,6 +903,103 @@ function Refresh-ProjectLauncher {
 }
 
 Refresh-ProjectLauncher
+
+# ==================================
+# QUICK LINKS
+# ==================================
+
+$grpQuickLinks = New-Object System.Windows.Forms.GroupBox
+$grpQuickLinks.Text = "Accesos web"
+$grpQuickLinks.Location = New-Object Drawing.Point(350,710)
+$grpQuickLinks.Size = New-Object Drawing.Size(430,220)
+$grpQuickLinks.Anchor = (
+    [System.Windows.Forms.AnchorStyles]::Top -bor
+    [System.Windows.Forms.AnchorStyles]::Left -bor
+    [System.Windows.Forms.AnchorStyles]::Right
+)
+
+$flowQuickLinks = New-Object System.Windows.Forms.FlowLayoutPanel
+$flowQuickLinks.Location = New-Object Drawing.Point(10,25)
+$flowQuickLinks.Size = New-Object Drawing.Size(400,140)
+$flowQuickLinks.Anchor = (
+    [System.Windows.Forms.AnchorStyles]::Top -bor
+    [System.Windows.Forms.AnchorStyles]::Left -bor
+    [System.Windows.Forms.AnchorStyles]::Right
+)
+$flowQuickLinks.AutoScroll = $true
+$flowQuickLinks.FlowDirection = "TopDown"
+$flowQuickLinks.WrapContents = $false
+$grpQuickLinks.Controls.Add($flowQuickLinks)
+
+$btnManageQuickLinks = New-Object System.Windows.Forms.Button
+$btnManageQuickLinks.Text = "Administrar accesos web"
+$btnManageQuickLinks.Location = New-Object Drawing.Point(10,175)
+$btnManageQuickLinks.Size = New-Object Drawing.Size(400,30)
+$btnManageQuickLinks.Anchor = (
+    [System.Windows.Forms.AnchorStyles]::Bottom -bor
+    [System.Windows.Forms.AnchorStyles]::Left -bor
+    [System.Windows.Forms.AnchorStyles]::Right
+)
+$btnManageQuickLinks.Add_Click({
+
+    Invoke-Safely {
+        Show-QuickLinksForm
+        Refresh-QuickLinks
+    }
+
+})
+$grpQuickLinks.Controls.Add($btnManageQuickLinks)
+$form.Controls.Add($grpQuickLinks)
+
+function Refresh-QuickLinks {
+
+    $flowQuickLinks.Controls.Clear()
+    $links = @(Get-QuickLinks)
+    $invalidLinks = 0
+
+    foreach($link in $links){
+
+        try{
+            $validatedLink = ConvertTo-QuickLink $link
+        }
+        catch{
+            $invalidLinks++
+            continue
+        }
+
+        $linkButton = New-Object System.Windows.Forms.Button
+        $linkButton.Text = $validatedLink.name
+        $linkButton.Tag = $validatedLink
+        $linkButton.Size = New-Object Drawing.Size(
+            [Math]::Max(120, $flowQuickLinks.ClientSize.Width - 28),
+            36
+        )
+        $linkButton.Add_Click({
+            param($control, $eventRecord)
+
+            Invoke-Safely {
+                Open-QuickLink -Link $control.Tag
+            }
+        })
+
+        $flowQuickLinks.Controls.Add($linkButton)
+    }
+
+    if($flowQuickLinks.Controls.Count -eq 0){
+
+        $emptyLinksLabel = New-Object System.Windows.Forms.Label
+        if($invalidLinks -gt 0){
+            $emptyLinksLabel.Text = "Revise los enlaces inválidos en el gestor."
+        }
+        else{
+            $emptyLinksLabel.Text = "No hay accesos web configurados."
+        }
+        $emptyLinksLabel.AutoSize = $true
+        $flowQuickLinks.Controls.Add($emptyLinksLabel)
+    }
+}
+
+Refresh-QuickLinks
 
 # ==================================
 # EXIT

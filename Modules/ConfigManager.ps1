@@ -129,6 +129,25 @@ function Initialize-LauncherConfiguration {
     }
 
     # ===============================
+    # links.json
+    # ===============================
+
+    $linksFile =
+        Join-Path $Global:ConfigFolder "links.json"
+
+    if(!(Test-Path $linksFile)){
+
+        @{
+            links = @()
+        } |
+        ConvertTo-Json -Depth 5 |
+        Set-Content `
+            $linksFile `
+            -Encoding UTF8
+
+    }
+
+    # ===============================
     # launcher.log
     # ===============================
 

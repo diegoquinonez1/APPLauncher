@@ -191,6 +191,8 @@ Utilización de `launcher.log` como origen de métricas.
 #### Nuevo módulo
 Accesos Rápidos
 
+#### Estado: ✅ Implementado en Sprint 4
+
 #### Destinos configurables
 - Azure DevOps
 - Jira
@@ -201,7 +203,9 @@ Accesos Rápidos
 - Teams
 
 #### Configuración
-Desde archivo JSON.
+Desde `Config/links.json`, con administración visual para crear, editar y eliminar accesos. Los cambios actualizan inmediatamente los botones de la pantalla principal.
+
+Las URLs deben ser absolutas y usar `http` o `https`. El Launcher omite los registros inválidos y no admite credenciales dentro de la URL.
 
 #### Ejemplo
 ```json
@@ -209,11 +213,17 @@ Desde archivo JSON.
   "links": [
     {
       "name": "Azure DevOps",
-      "url": "https://..."
+      "url": "https://example.com/devops"
+    },
+    {
+      "name": "Jira",
+      "url": "https://example.com/jira"
     }
   ]
 }
 ```
+
+El Launcher abre cada destino en el navegador predeterminado y crea `links.json` vacío cuando aún no existe.
 
 ---
 

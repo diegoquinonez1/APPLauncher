@@ -6,6 +6,11 @@ La evolución del Launcher se organizó en sprints secuenciales para entregar fu
 
 ---
 
+## Criterios transversales de interfaz
+- Toda nueva funcionalidad, módulo o formulario debe mantener una interfaz ordenada, legible y visible dentro del área útil de la pantalla; los controles deben adaptarse al redimensionamiento o disponer de desplazamiento cuando sea necesario.
+- Las listas y colecciones dinámicas deben seguir siendo utilizables al crecer, sin ocultar botones ni contenido y sin depender de una cantidad fija de elementos.
+- Los textos de la interfaz deben conservar correctamente tildes y caracteres especiales. Los scripts PowerShell se guardan como UTF-8 con BOM para mantener compatibilidad con Windows PowerShell.
+
 ## Sprint 1
 ### ✅ Dynamic Project Launcher
 - Eliminación de la dependencia de accesos hardcodeados.
@@ -90,6 +95,30 @@ La evolución del Launcher se organizó en sprints secuenciales para entregar fu
 - Nuevo módulo de accesos rápidos.
 - Configuración de enlaces internos y corporativos.
 - Soporte para herramientas como Azure DevOps, Jira, Confluence, GitHub, SharePoint y Teams.
+
+### Implementación
+- El panel `Accesos web` de la pantalla principal genera un botón por cada enlace válido y permite abrirlo en el navegador predeterminado.
+- `Config/links.json` almacena la colección `links`; el Launcher crea el archivo con una lista vacía si todavía no existe.
+- El gestor de accesos permite crear, editar y eliminar enlaces, con actualización inmediata del panel principal.
+- Se requiere un nombre único y una URL absoluta `http` o `https`. Se rechazan esquemas distintos, URLs inválidas y URLs que incluyan credenciales.
+- Los enlaces inválidos presentes en el JSON no se muestran ni se abren; se pueden corregir desde el gestor.
+- La lista admite una cantidad variable de enlaces y dispone de desplazamiento.
+
+### Configuración
+```json
+{
+	"links": [
+		{
+			"name": "Azure DevOps",
+			"url": "https://example.com/devops"
+		},
+		{
+			"name": "Jira",
+			"url": "https://example.com/jira"
+		}
+	]
+}
+```
 
 ---
 
