@@ -2,14 +2,14 @@
 
 ## Resumen ejecutivo
 
-El Launcher ha cerrado los sprints 1 a 5, con la plataforma configurable y la expiración de credenciales implementadas. La siguiente etapa es completar la exportación/importación de perfiles y, posteriormente, la actualización automática y la distribución corporativa.
+El Launcher ha cerrado los sprints 1 a 7, incluyendo exportación/importación de perfiles y actualización desde un repositorio compartido. La arquitectura de plugins y la distribución corporativa formal siguen como evoluciones posteriores.
 
 ## Estado actual
 
 ### Versión actual
 - AON Launcher V4.4
 - Estado: Producto estable, listo para uso diario.
-- Sprints 1 a 6 cerrados; actualización automática y distribución corporativa siguen pendientes.
+- Sprints 1 a 7 cerrados; arquitectura de plugins y distribución corporativa siguen pendientes.
 
 ---
 
@@ -293,14 +293,21 @@ Las credenciales se protegen en el archivo con una frase de paso y AES-256-CBC a
 La evolución final del Launcher.
 
 ### Actualización automática
-Archivo objetivo:
-- `version.json`
+#### Estado: ✅ Implementada en Sprint 7
 
-Validaciones:
-- Versión actual
-- Versión disponible
+La pantalla principal permite buscar una nueva versión en una carpeta local o compartida configurada en `Config/settings.json` mediante `updateSource`. El repositorio debe contener `version.json` y el paquete ZIP declarado por el manifiesto.
 
-Se contempla una actualización desde un repositorio compartido.
+El manifiesto compara la versión disponible con la instalada y declara el nombre del ZIP y su SHA-256. El paquete contiene `update.json`, con su versión y el hash SHA-256 de cada archivo. Solo se admiten archivos del Launcher, módulos, assets y ejecutable; se excluyen configuración, logs y respaldos.
+
+La actualización se prepara en una carpeta temporal, verifica hashes y rutas antes de aplicar, y se instala con un proceso auxiliar después de cerrar el Launcher. Se respaldan los archivos reemplazados y se intenta restaurarlos si la instalación falla.
+
+`Publish-Update.ps1` genera el ZIP, `update.json` y `version.json`. Ejemplo de publicación:
+
+```powershell
+.\Publish-Update.ps1 -Version 4.5.0 -RepositoryPath '\\servidor\AONLauncher\releases'
+```
+
+El origen se configura desde la pantalla del Launcher o en `Config/settings.json` usando `updateSource`. Si se distribuye `AONLauncher.exe`, debe reconstruirse con `Build.ps1` antes de publicar; el publicador rechaza un ejecutable más antiguo que sus fuentes. Mantenga permisos de escritura restringidos en el recurso compartido.
 
 ### Arquitectura de plugins
 Posibilidad de agregar:
@@ -332,6 +339,7 @@ El producto actual se encuentra en una etapa de madurez operativa y está prepar
 ### Estado
 - Producto estable
 - Listo para uso diario
-- Sprints 1 a 5 cerrados
+- Sprints 1 a 7 cerrados
 - V4.4: exportación e importación de perfil implementada
-- Actualización automática planificada para V5.0
+- Actualización automática implementada en Sprint 7
+- Arquitectura de plugins y distribución corporativa planificadas para V5.0

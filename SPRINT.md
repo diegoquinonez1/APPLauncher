@@ -143,11 +143,14 @@ La evolución del Launcher se organizó en sprints secuenciales para entregar fu
 
 ---
 
-## Sprint 7 (Pendiente)
-### Auto Update
+## Sprint 7
+### ✅ Auto Update
 - Validación de versión actual y disponible.
-- Actualización desde repositorio compartido.
-- Preparación para una distribución más controlada y corporativa.
+- Búsqueda de actualizaciones desde una carpeta local o compartida configurada en `settings.json`.
+- Validación de SHA-256 del paquete y de cada archivo antes de aplicar la actualización.
+- Aplicación mediante un proceso auxiliar al cerrar el Launcher, con respaldo de los archivos reemplazados, rollback ante errores y reinicio posterior.
+- Los paquetes no pueden reemplazar `Config`, `Logs` ni `Backups`.
+- `Publish-Update.ps1` genera `version.json`, el ZIP y el manifiesto `update.json`; la carpeta del repositorio debe tener escritura restringida al equipo de publicación.
 
 ---
 
@@ -157,5 +160,4 @@ La evolución del Launcher se organizó en sprints secuenciales para entregar fu
 ## Estado
 - Producto estable
 - Listo para uso diario
-- Sprints 1 a 6 implementados
-- Sprint 7 pendiente
+- Sprints 1 a 7 implementados

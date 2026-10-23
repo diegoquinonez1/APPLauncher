@@ -31,6 +31,7 @@ else {
 
 . "$Root\Modules\ConfigManager.ps1"
 . "$Root\Modules\ProfileTransfer.ps1"
+. "$Root\Modules\UpdateManager.ps1"
 . "$Root\Modules\UserManager.ps1"
 . "$Root\Modules\LogManager.ps1"
 . "$Root\Modules\ApplicationManager.ps1"
@@ -65,7 +66,7 @@ $users = Get-Users
 # ==================================
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "AON Launcher V4.4"
+$form.Text = "AON Launcher V$($script:LauncherVersion.ToString(3))"
 $screenArea = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
 $form.AutoScroll = $true
 $form.AutoScrollMinSize = New-Object Drawing.Size(920,960)
@@ -760,6 +761,105 @@ $btnImportProfile.Add_Click({
 
 })
 $form.Controls.Add($btnImportProfile)
+
+function Invoke-LauncherUpdate {
+
+    $settings = Get-JsonFile "settings.json"
+    $updateSource = [string]$settings.updateSource
+
+    if([string]::IsNullOrWhiteSpace($updateSource)){
+        Set-LauncherUpdateSource
+        $settings = Get-JsonFile "settings.json"
+        $updateSource = [string]$settings.updateSource
+        if([string]::IsNullOrWhiteSpace($updateSource)){
+            return
+        }
+    }
+
+    $preparedUpdate = $null
+    $handoffStarted = $false
+    try{
+        $release = Get-LauncherUpdateRelease -UpdateSource $updateSource
+        if(-not $release.IsUpdateAvailable){
+            Show-Info "El Launcher está actualizado. Versión instalada: $($release.CurrentVersion.ToString(3)); versión disponible: $($release.VersionText)."
+            return
+        }
+
+        $confirmation = [System.Windows.Forms.MessageBox]::Show(
+            "Hay una actualización disponible ($($release.VersionText)). La versión instalada es $($release.CurrentVersion.ToString(3)). Se respaldarán los archivos reemplazados y el Launcher se reiniciará. ¿Desea instalarla ahora?",
+            "Actualización disponible",
+            [System.Windows.Forms.MessageBoxButtons]::YesNo,
+            [System.Windows.Forms.MessageBoxIcon]::Information
+        )
+        if($confirmation -ne [System.Windows.Forms.DialogResult]::Yes){
+            return
+        }
+
+        $preparedUpdate = Expand-VerifiedLauncherUpdate -Release $release
+        Start-LauncherUpdate `
+            -PreparedUpdate $preparedUpdate `
+            -InstallRoot $Root | Out-Null
+        $handoffStarted = $true
+        $form.Close()
+    }
+    catch{
+        Show-Error $_.Exception.Message
+    }
+    finally{
+        if(
+            -not $handoffStarted -and
+            $null -ne $preparedUpdate -and
+            (Test-Path -LiteralPath $preparedUpdate.TemporaryRoot)
+        ){
+            Remove-Item -LiteralPath $preparedUpdate.TemporaryRoot -Recurse -Force
+        }
+    }
+}
+
+$btnCheckUpdates = New-Object System.Windows.Forms.Button
+$btnCheckUpdates.Text = "Buscar actualizaciones"
+$btnCheckUpdates.Location = New-Object Drawing.Point(790,390)
+$btnCheckUpdates.Size = New-Object Drawing.Size(140,40)
+$btnCheckUpdates.Add_Click({
+    Invoke-Safely {
+        Invoke-LauncherUpdate
+    }
+})
+$form.Controls.Add($btnCheckUpdates)
+
+function Set-LauncherUpdateSource {
+
+    $settings = Get-JsonFile "settings.json"
+    $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
+    $dialog.Description = "Seleccione la carpeta compartida que contiene version.json y los paquetes del Launcher."
+    if(Test-Path -LiteralPath ([string]$settings.updateSource) -PathType Container){
+        $dialog.SelectedPath = [string]$settings.updateSource
+    }
+
+    if($dialog.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK){
+        if($settings.PSObject.Properties["updateSource"]){
+            $settings.updateSource = $dialog.SelectedPath
+        }
+        else{
+            $settings | Add-Member -NotePropertyName updateSource -NotePropertyValue $dialog.SelectedPath
+        }
+        Save-JsonFile "settings.json" $settings
+        Show-Info "Origen de actualizaciones guardado."
+    }
+
+    $dialog.Dispose()
+}
+
+$btnUpdateSource = New-Object System.Windows.Forms.Button
+$btnUpdateSource.Text = "Configurar origen"
+$btnUpdateSource.Location = New-Object Drawing.Point(790,445)
+$btnUpdateSource.Size = New-Object Drawing.Size(140,40)
+$btnUpdateSource.Add_Click({
+    Invoke-Safely {
+        Set-LauncherUpdateSource
+    }
+})
+$form.Controls.Add($btnUpdateSource)
 
 # ==================================
 # RE-SCAN

@@ -37,6 +37,7 @@ function Initialize-LauncherConfiguration {
         @{
             selectedUser   = "adm-A0836618"
             lastEnvironment = "DEV"
+            updateSource = ""
         } |
         ConvertTo-Json |
         Set-Content `
