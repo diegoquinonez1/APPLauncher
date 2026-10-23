@@ -7,9 +7,9 @@ El Launcher ha cerrado los sprints 1 a 5, con la plataforma configurable y la ex
 ## Estado actual
 
 ### Versión actual
-- AON Launcher V4.3
+- AON Launcher V4.4
 - Estado: Producto estable, listo para uso diario.
-- Sprints 1 a 5 cerrados; exportación/importación y actualización automática siguen pendientes.
+- Sprints 1 a 6 cerrados; actualización automática y distribución corporativa siguen pendientes.
 
 ---
 
@@ -261,21 +261,25 @@ Las credenciales expiradas se eliminan de `Config/credentials.json` al iniciar e
 
 ---
 
-## 🚀 V4.4 - Exportación e importación de perfil
+## ✅ V4.4 - Exportación e importación de perfil
+
+### Estado: Implementado en Sprint 6
 
 ### Exportación de perfil
-Exportar toda la configuración:
+Exporta a un archivo ZIP de perfil:
 - Usuarios
 - Favoritos
 - Credenciales
 - Proyectos
-- Configuración
+- Enlaces y configuración de aplicaciones/entorno
 
 Formato esperado:
 - `usuario.profile.zip`
 
 ### Importación de perfil
-Restaurar la configuración completa en otra máquina.
+Restaura la configuración en otra máquina, valida el contenido antes de reemplazar archivos y genera un respaldo de la configuración actual. La interfaz se actualiza después de importar.
+
+Las credenciales se protegen en el archivo con una frase de paso y AES-256-CBC autenticado con HMAC-SHA256; al importarlas se cifran de nuevo con DPAPI para el usuario y equipo destino.
 
 ### Casos de uso
 - Cambio de equipo.
@@ -323,11 +327,11 @@ Con:
 El producto actual se encuentra en una etapa de madurez operativa y está preparado para evolucionar hacia una plataforma más modular, segura y escalable.
 
 ### Versión actual
-- AON Launcher V4.3
+- AON Launcher V4.4
 
 ### Estado
 - Producto estable
 - Listo para uso diario
 - Sprints 1 a 5 cerrados
-- Próxima etapa: V4.4, exportación e importación de perfil
+- V4.4: exportación e importación de perfil implementada
 - Actualización automática planificada para V5.0

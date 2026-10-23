@@ -134,11 +134,12 @@ La evolución del Launcher se organizó en sprints secuenciales para entregar fu
 
 ---
 
-## Sprint 6 (Pendiente)
-### Export / Import de Perfil
-- Exportación de configuración completa.
-- Importación de perfil en otra máquina.
-- Facilita migración, respaldo y cambio de equipo.
+## Sprint 6
+### ✅ Export / Import de Perfil
+- Exportación de usuarios, favoritos, credenciales, proyectos y configuración a un archivo ZIP de perfil.
+- Importación del perfil en otra máquina, con validación previa y respaldo automático de la configuración actual.
+- Las credenciales portables se protegen con una frase de paso y se vuelven a cifrar con DPAPI al importarlas.
+- La interfaz permite exportar e importar y refresca los datos visibles después de una importación correcta.
 
 ---
 
@@ -151,10 +152,10 @@ La evolución del Launcher se organizó en sprints secuenciales para entregar fu
 ---
 
 ## Versión actual
-- AON Launcher V4.3
+- AON Launcher V4.4
 
 ## Estado
 - Producto estable
 - Listo para uso diario
-- Sprints 1 a 5 implementados y cerrados
-- Sprints 6 y 7 pendientes
+- Sprints 1 a 6 implementados
+- Sprint 7 pendiente

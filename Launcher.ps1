@@ -30,6 +30,7 @@ else {
 # ==================================
 
 . "$Root\Modules\ConfigManager.ps1"
+. "$Root\Modules\ProfileTransfer.ps1"
 . "$Root\Modules\UserManager.ps1"
 . "$Root\Modules\LogManager.ps1"
 . "$Root\Modules\ApplicationManager.ps1"
@@ -64,7 +65,7 @@ $users = Get-Users
 # ==================================
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "AON Launcher V4.3"
+$form.Text = "AON Launcher V4.4"
 $screenArea = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
 $form.AutoScroll = $true
 $form.AutoScrollMinSize = New-Object Drawing.Size(920,960)
@@ -662,6 +663,104 @@ $btnLogs.Add_Click({
 
 $form.Controls.Add($btnLogs)
 
+$btnExportProfile = New-Object System.Windows.Forms.Button
+$btnExportProfile.Text = "Exportar perfil"
+$btnExportProfile.Location = New-Object Drawing.Point(790,280)
+$btnExportProfile.Size = New-Object Drawing.Size(140,40)
+$btnExportProfile.Add_Click({
+
+    $dialog = New-Object System.Windows.Forms.SaveFileDialog
+    $dialog.Filter = "Perfil AON (*.profile.zip)|*.profile.zip"
+    $dialog.DefaultExt = "profile.zip"
+    $dialog.AddExtension = $true
+    $dialog.FileName = "$env:USERNAME.profile.zip"
+
+    if($dialog.ShowDialog($form) -ne [System.Windows.Forms.DialogResult]::OK){
+        return
+    }
+
+    $passphrase = Show-LauncherProfilePassphraseDialog `
+        -Title "Proteger perfil exportado" `
+        -ConfirmPassphrase $true `
+        -Owner $form
+
+    if($null -eq $passphrase){
+        return
+    }
+
+    try{
+        Export-LauncherProfile `
+            -DestinationPath $dialog.FileName `
+            -Passphrase $passphrase
+
+        Show-Info "Perfil exportado correctamente. Guarde la frase de paso: se necesitará para importarlo."
+    }
+    catch{
+        Show-Error $_.Exception.Message
+    }
+    finally{
+        $passphrase.Dispose()
+        $dialog.Dispose()
+    }
+
+})
+$form.Controls.Add($btnExportProfile)
+
+$btnImportProfile = New-Object System.Windows.Forms.Button
+$btnImportProfile.Text = "Importar perfil"
+$btnImportProfile.Location = New-Object Drawing.Point(790,335)
+$btnImportProfile.Size = New-Object Drawing.Size(140,40)
+$btnImportProfile.Add_Click({
+
+    $dialog = New-Object System.Windows.Forms.OpenFileDialog
+    $dialog.Filter = "Perfil AON (*.profile.zip)|*.profile.zip|ZIP (*.zip)|*.zip"
+    $dialog.CheckFileExists = $true
+
+    if($dialog.ShowDialog($form) -ne [System.Windows.Forms.DialogResult]::OK){
+        $dialog.Dispose()
+        return
+    }
+
+    $confirmation = [System.Windows.Forms.MessageBox]::Show(
+        "La importación reemplazará usuarios, favoritos, credenciales, proyectos, enlaces y configuración. Se creará un respaldo automático. ¿Desea continuar?",
+        "Confirmar importación de perfil",
+        [System.Windows.Forms.MessageBoxButtons]::YesNo,
+        [System.Windows.Forms.MessageBoxIcon]::Warning
+    )
+    if($confirmation -ne [System.Windows.Forms.DialogResult]::Yes){
+        $dialog.Dispose()
+        return
+    }
+
+    $passphrase = Show-LauncherProfilePassphraseDialog `
+        -Title "Desproteger perfil" `
+        -ConfirmPassphrase $false `
+        -Owner $form
+
+    if($null -eq $passphrase){
+        $dialog.Dispose()
+        return
+    }
+
+    try{
+        $result = Import-LauncherProfile `
+            -SourcePath $dialog.FileName `
+            -Passphrase $passphrase
+
+        Update-LauncherAfterProfileImport
+        Show-Info "Perfil importado. Se actualizaron $($result.ImportedFiles) archivos y se creó un respaldo de la configuración anterior."
+    }
+    catch{
+        Show-Error $_.Exception.Message
+    }
+    finally{
+        $passphrase.Dispose()
+        $dialog.Dispose()
+    }
+
+})
+$form.Controls.Add($btnImportProfile)
+
 # ==================================
 # RE-SCAN
 # ==================================
@@ -1030,6 +1129,41 @@ function Refresh-QuickLinks {
 }
 
 Refresh-QuickLinks
+
+function Update-LauncherAfterProfileImport {
+
+    $settings = Get-JsonFile "settings.json"
+    $users = Get-Users
+    $cmbUser.Items.Clear()
+
+    foreach($user in @($users.users)){
+        if(-not [string]::IsNullOrWhiteSpace([string]$user)){
+            [void]$cmbUser.Items.Add([string]$user)
+        }
+    }
+
+    if($cmbUser.Items.Contains([string]$settings.selectedUser)){
+        $cmbUser.SelectedItem = [string]$settings.selectedUser
+    }
+    elseif($cmbUser.Items.Count -gt 0){
+        $cmbUser.SelectedIndex = 0
+    }
+    else{
+        $cmbUser.SelectedIndex = -1
+    }
+
+    switch([string]$settings.lastEnvironment){
+        "DEV" { $rbDev.Checked = $true }
+        "QC" { $rbQc.Checked = $true }
+        "PROD" { $rbProd.Checked = $true }
+        default { $rbDev.Checked = $true }
+    }
+
+    RefreshAppStatus
+    Refresh-ProjectLauncher
+    Refresh-QuickLinks
+    RefreshDashboard
+}
 
 # ==================================
 # EXIT
