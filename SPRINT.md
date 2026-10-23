@@ -134,16 +134,16 @@ La evolución del Launcher se organizó en sprints secuenciales para entregar fu
 
 ---
 
-## Sprint 6
-### ✅ Export / Import de Perfil
+## Sprint 6 (Pendiente)
+### Export / Import de Perfil
 - Exportación de configuración completa.
 - Importación de perfil en otra máquina.
 - Facilita migración, respaldo y cambio de equipo.
 
 ---
 
-## Sprint 7
-### ✅ Auto Update
+## Sprint 7 (Pendiente)
+### Auto Update
 - Validación de versión actual y disponible.
 - Actualización desde repositorio compartido.
 - Preparación para una distribución más controlada y corporativa.
@@ -151,9 +151,10 @@ La evolución del Launcher se organizó en sprints secuenciales para entregar fu
 ---
 
 ## Versión actual
-- AON Launcher V4.1.1
+- AON Launcher V4.3
 
 ## Estado
 - Producto estable
 - Listo para uso diario
-- Sprints 1 a 5 implementados
+- Sprints 1 a 5 implementados y cerrados
+- Sprints 6 y 7 pendientes

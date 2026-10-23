@@ -2,14 +2,14 @@
 
 ## Resumen ejecutivo
 
-El Launcher ha consolidado una base sólida en la versión 4.1 y está preparado para evolucionar hacia una plataforma más configurable, segura y escalable. El enfoque principal de las próximas versiones es reducir configuraciones hardcodeadas, mejorar la gestión de credenciales y completar un modelo de operación más robusto para equipos corporativos.
+El Launcher ha cerrado los sprints 1 a 5, con la plataforma configurable y la expiración de credenciales implementadas. La siguiente etapa es completar la exportación/importación de perfiles y, posteriormente, la actualización automática y la distribución corporativa.
 
 ## Estado actual
 
 ### Versión actual
-- AON Launcher V4.1.1
+- AON Launcher V4.3
 - Estado: Producto estable, listo para uso diario.
-- Base preparada para la evolución hacia V4.2.
+- Sprints 1 a 5 cerrados; exportación/importación y actualización automática siguen pendientes.
 
 ---
 
@@ -323,9 +323,11 @@ Con:
 El producto actual se encuentra en una etapa de madurez operativa y está preparado para evolucionar hacia una plataforma más modular, segura y escalable.
 
 ### Versión actual
-- AON Launcher V4.1.1
+- AON Launcher V4.3
 
 ### Estado
 - Producto estable
 - Listo para uso diario
-- Base preparada para evolución hacia V4.2
+- Sprints 1 a 5 cerrados
+- Próxima etapa: V4.4, exportación e importación de perfil
+- Actualización automática planificada para V5.0

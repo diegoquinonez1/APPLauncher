@@ -64,7 +64,7 @@ $users = Get-Users
 # ==================================
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "AON Launcher V4.1"
+$form.Text = "AON Launcher V4.3"
 $screenArea = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
 $form.AutoScroll = $true
 $form.AutoScrollMinSize = New-Object Drawing.Size(920,960)

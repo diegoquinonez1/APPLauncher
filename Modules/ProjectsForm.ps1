@@ -2,10 +2,15 @@
 
     $formProjects = New-Object System.Windows.Forms.Form
     $formProjects.Text = "Administración de Proyectos"
-    $formProjects.Width = 980
-    $formProjects.Height = 620
+    $screenArea = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
+    $formProjects.AutoScroll = $true
+    $formProjects.AutoScrollMinSize = New-Object Drawing.Size(920,510)
+    $formProjects.Size = New-Object Drawing.Size(
+        [Math]::Min(980, $screenArea.Width),
+        [Math]::Min(620, $screenArea.Height)
+    )
     $formProjects.StartPosition = "CenterParent"
-    $formProjects.MaximizeBox = $false
+    $formProjects.MaximizeBox = $true
 
     # ==================================
     # LISTA
@@ -14,6 +19,11 @@
     $list = New-Object System.Windows.Forms.ListBox
     $list.Location = New-Object Drawing.Point(20,20)
     $list.Size = New-Object Drawing.Size(300,440)
+    $list.Anchor = (
+        [System.Windows.Forms.AnchorStyles]::Top -bor
+        [System.Windows.Forms.AnchorStyles]::Bottom -bor
+        [System.Windows.Forms.AnchorStyles]::Left
+    )
     $formProjects.Controls.Add($list)
 
     # ==================================
@@ -276,16 +286,6 @@
             return
         }
 
-        if([string]::IsNullOrWhiteSpace($environment)){
-            Show-Error "Seleccione un entorno."
-            return
-        }
-
-        if([string]::IsNullOrWhiteSpace($user)){
-            Show-Error "Seleccione un usuario."
-            return
-        }
-
         if(
             $startupApps.Count -eq 0 -and
             [string]::IsNullOrWhiteSpace($solution) -and
@@ -295,15 +295,16 @@
             return
         }
 
-        if(
-            $startupApps.Count -gt 0 -and
-            (
-                [string]::IsNullOrWhiteSpace($environment) -or
-                [string]::IsNullOrWhiteSpace($user)
-            )
-        ){
-            Show-Error "Los perfiles con aplicaciones deben tener entorno y usuario."
-            return
+        if($startupApps.Count -gt 0){
+            if([string]::IsNullOrWhiteSpace($environment)){
+                Show-Error "Seleccione un entorno para las aplicaciones de inicio."
+                return
+            }
+
+            if([string]::IsNullOrWhiteSpace($user)){
+                Show-Error "Seleccione un usuario para las aplicaciones de inicio."
+                return
+            }
         }
 
         $selectedOriginalName = $null

@@ -61,15 +61,15 @@ function Start-AONApplication {
     $domain =
         Get-DomainByEnvironment $Environment
 
-    Write-LauncherLog `
-        $Environment `
-        "$domain\$User" `
-        $ApplicationName
-
     $arguments =
         "/netonly /noprofile /env /user:$domain\$User `"$exe`""
 
     Start-Process `
         runas.exe `
         -ArgumentList $arguments
+
+    Write-LauncherLog `
+        $Environment `
+        "$domain\$User" `
+        $ApplicationName
 }
