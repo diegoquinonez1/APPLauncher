@@ -2,6 +2,12 @@
 
 APPLauncher es una aplicación de escritorio para Windows construida con PowerShell y Windows Forms. Centraliza el inicio de herramientas administrativas, perfiles de proyecto, favoritos, accesos web, gestión de usuarios y credenciales, métricas de actividad y actualización del propio launcher.
 
+## Licencia y atribución
+
+APPLauncher se distribuye bajo [PolyForm Noncommercial License 1.0.0](LICENSE). Permite usar, modificar y compartir el software para fines no comerciales, conservando el texto de la licencia y el aviso de copyright. Reconocimiento: **APPLauncher, creado por Diego Quinonez**.
+
+Esta licencia prohíbe el uso comercial, no solamente vender copias. Un uso dentro de una actividad empresarial puede quedar fuera del permiso aunque no se cobre por el programa. Para esos casos se requiere autorización separada del titular. Revisa el texto completo en `LICENSE`.
+
 ## Inicio rápido
 
 - Ejecutar desde código: `./Launcher.ps1` (PowerShell en Windows).
