@@ -241,7 +241,7 @@ function Show-LauncherProfilePassphraseDialog {
         $dialog.Controls.Add($confirmationBox)
     }
 
-    $result = $null
+    $dialog.Tag = $null
     $acceptButton = New-Object System.Windows.Forms.Button
     $acceptButton.Text = "Aceptar"
     $acceptButton.Location = New-Object Drawing.Point(225,155)
@@ -270,12 +270,12 @@ function Show-LauncherProfilePassphraseDialog {
             return
         }
 
-        $result = ConvertTo-SecureString $passwordBox.Text -AsPlainText -Force
+        $dialog.Tag = ConvertTo-SecureString $passwordBox.Text -AsPlainText -Force
         $passwordBox.Clear()
         if($null -ne $confirmationBox){ $confirmationBox.Clear() }
         $dialog.DialogResult = [System.Windows.Forms.DialogResult]::OK
         $dialog.Close()
-    })
+    }.GetNewClosure())
     $dialog.Controls.Add($acceptButton)
 
     $cancelButton = New-Object System.Windows.Forms.Button
@@ -294,6 +294,8 @@ function Show-LauncherProfilePassphraseDialog {
         [void]$dialog.ShowDialog()
     }
 
+    $result = $dialog.Tag
+    $dialog.Tag = $null
     $passwordBox.Clear()
     if($null -ne $confirmationBox){ $confirmationBox.Clear() }
     $dialog.Dispose()

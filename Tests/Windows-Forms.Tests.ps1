@@ -15,6 +15,7 @@ Describe "Windows Forms: smoke tests de pantallas por funcionalidad" {
         . (Join-Path $script:AONTestRepositoryRoot "Modules\FavoriteForm.ps1")
         . (Join-Path $script:AONTestRepositoryRoot "Modules\QuickLinksForm.ps1")
         . (Join-Path $script:AONTestRepositoryRoot "Modules\CredentialManager.ps1")
+        . (Join-Path $script:AONTestRepositoryRoot "Modules\ProfileTransfer.ps1")
         . (Join-Path $script:AONTestRepositoryRoot "Modules\CredentialForm.ps1")
         . (Join-Path $script:AONTestRepositoryRoot "Modules\LogManager.ps1")
         . (Join-Path $script:AONTestRepositoryRoot "Modules\UiHelpers.ps1")
@@ -22,6 +23,10 @@ Describe "Windows Forms: smoke tests de pantallas por funcionalidad" {
     }
 
     AfterEach {
+        if($Global:AONTestPassphrase){
+            $Global:AONTestPassphrase.Dispose()
+            $Global:AONTestPassphrase = $null
+        }
         if($script:clipboardTimer){
             $script:clipboardTimer.Stop()
             $script:clipboardTimer.Dispose()
@@ -137,5 +142,37 @@ Describe "Windows Forms: smoke tests de pantallas por funcionalidad" {
         $Global:AONTestFormSnapshot.HasVerify | Should Be $true
         $Global:AONTestFormSnapshot.HasCopy | Should Be $true
         $Global:AONTestFormSnapshot.HasDelete | Should Be $true
+    }
+
+    It "La passphrase introducida en el diálogo se devuelve al flujo de exportación" {
+        $Global:AONTestPassphrase = $null
+
+        Invoke-AONWinFormsDialog `
+            -Title "Prueba automatizada de passphrase" `
+            -ShowForm {
+                $Global:AONTestPassphrase = Show-LauncherProfilePassphraseDialog `
+                    -Title "Prueba automatizada de passphrase" `
+                    -ConfirmPassphrase $true `
+                    -Owner $null
+            } `
+            -OnShown {
+                param($form)
+                $controls = @([AONLauncherTestControlWalker]::GetDescendants($form))
+                $passwordFields = @($controls | Where-Object {$_ -is [System.Windows.Forms.TextBox]})
+                $acceptButton = @($controls | Where-Object {$_.Text -eq "Aceptar"})[0]
+                $passwordFields[0].Text = "test-profile-passphrase-2026"
+                $passwordFields[1].Text = "test-profile-passphrase-2026"
+                $acceptButton.PerformClick()
+            } | Out-Null
+
+        $null -ne $Global:AONTestPassphrase | Should Be $true
+        $Global:AONTestPassphrase.Length | Should BeGreaterThan 12
+
+        $profilePath = Join-Path $script:testRoot "ui-export.profile.zip"
+        Export-LauncherProfile `
+            -DestinationPath $profilePath `
+            -Passphrase $Global:AONTestPassphrase
+
+        Test-Path -LiteralPath $profilePath | Should Be $true
     }
 }

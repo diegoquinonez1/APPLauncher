@@ -832,8 +832,12 @@ function Set-LauncherUpdateSource {
     $settings = Get-JsonFile "settings.json"
     $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
     $dialog.Description = "Seleccione la carpeta compartida que contiene version.json y los paquetes del Launcher."
-    if(Test-Path -LiteralPath ([string]$settings.updateSource) -PathType Container){
-        $dialog.SelectedPath = [string]$settings.updateSource
+    $currentUpdateSource = [string]$settings.updateSource
+    if(
+        -not [string]::IsNullOrWhiteSpace($currentUpdateSource) -and
+        (Test-Path -LiteralPath $currentUpdateSource -PathType Container)
+    ){
+        $dialog.SelectedPath = $currentUpdateSource
     }
 
     if($dialog.ShowDialog($form) -eq [System.Windows.Forms.DialogResult]::OK){
