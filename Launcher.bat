@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableDelayedExpansion
-title AON Tools Launcher v2.0
+title APPLauncher v2.0
 
 :: Directorios
 set "ROOT=%~dp0"
@@ -28,7 +28,7 @@ goto MENU_USUARIO
 
 cls
 echo ========================================
-echo        AON TOOLS LAUNCHER
+echo        APP LAUNCHER
 echo ========================================
 echo.
 echo Usuario actual:

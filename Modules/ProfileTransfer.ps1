@@ -315,7 +315,7 @@ function Export-LauncherProfile {
     [void](Get-ProfilePassphraseText $Passphrase)
 
     $temporaryRoot = Join-Path ([IO.Path]::GetTempPath()) (
-        "AONLauncherProfile_" + [guid]::NewGuid().ToString("N")
+        "APPLauncherProfile_" + [guid]::NewGuid().ToString("N")
     )
     $zipPath = "$temporaryRoot.zip"
 
@@ -463,7 +463,7 @@ function Import-LauncherProfile {
     [void](Get-ProfilePassphraseText $Passphrase)
 
     $temporaryRoot = Join-Path ([IO.Path]::GetTempPath()) (
-        "AONLauncherImport_" + [guid]::NewGuid().ToString("N")
+        "APPLauncherImport_" + [guid]::NewGuid().ToString("N")
     )
     $extractedRoot = Join-Path $temporaryRoot "profile"
     $rollbackRoot = Join-Path $temporaryRoot "rollback"

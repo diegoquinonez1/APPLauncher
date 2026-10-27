@@ -3,12 +3,12 @@
 Describe "Sprint 4: accesos web" {
 
     BeforeEach {
-        $script:testRoot = New-AONTestRoot
-        . (Join-Path $script:AONTestRepositoryRoot "Modules\QuickLinks.ps1")
+        $script:testRoot = New-APPLauncherTestRoot
+        . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\QuickLinks.ps1")
     }
 
     AfterEach {
-        Remove-AONTestRoot $script:testRoot
+        Remove-APPLauncherTestRoot $script:testRoot
     }
 
     It "Normaliza nombre y URL absoluta HTTP/HTTPS" {
@@ -22,10 +22,10 @@ Describe "Sprint 4: accesos web" {
     }
 
     It "Rechaza enlaces sin nombre, URL relativa, esquema no permitido o credenciales" {
-        (Test-AONThrows { ConvertTo-QuickLink ([PSCustomObject]@{name=" ";url="https://example.com"}) }) | Should Be $true
-        (Test-AONThrows { ConvertTo-QuickLink ([PSCustomObject]@{name="Relative";url="/path"}) }) | Should Be $true
-        (Test-AONThrows { ConvertTo-QuickLink ([PSCustomObject]@{name="Script";url="javascript:alert(1)"}) }) | Should Be $true
-        (Test-AONThrows { ConvertTo-QuickLink ([PSCustomObject]@{name="Credentials";url="https://user:secret@example.com"}) }) | Should Be $true
+        (Test-APPLauncherThrows { ConvertTo-QuickLink ([PSCustomObject]@{name=" ";url="https://example.com"}) }) | Should Be $true
+        (Test-APPLauncherThrows { ConvertTo-QuickLink ([PSCustomObject]@{name="Relative";url="/path"}) }) | Should Be $true
+        (Test-APPLauncherThrows { ConvertTo-QuickLink ([PSCustomObject]@{name="Script";url="javascript:alert(1)"}) }) | Should Be $true
+        (Test-APPLauncherThrows { ConvertTo-QuickLink ([PSCustomObject]@{name="Credentials";url="https://user:secret@example.com"}) }) | Should Be $true
     }
 
     It "Guarda enlaces únicos y conserva los existentes si una entrada nueva no es válida" {
@@ -34,7 +34,7 @@ Describe "Sprint 4: accesos web" {
             [PSCustomObject]@{name="Teams";url="https://example.com/teams"}
         )
 
-        (Test-AONThrows {
+        (Test-APPLauncherThrows {
             Save-QuickLinks -Links @(
                 [PSCustomObject]@{name="Confluence";url="https://example.com/wiki"},
                 [PSCustomObject]@{name="Bad";url="file:///etc/passwd"}
@@ -52,7 +52,7 @@ Describe "Sprint 4: accesos web" {
             [PSCustomObject]@{name="Azure DevOps";url="https://example.com/b"}
         )
 
-        (Test-AONThrows { Save-QuickLinks -Links $duplicateLinks }) | Should Be $true
+        (Test-APPLauncherThrows { Save-QuickLinks -Links $duplicateLinks }) | Should Be $true
         @((Get-QuickLinks)).Count | Should Be 0
     }
 

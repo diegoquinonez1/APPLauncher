@@ -155,7 +155,7 @@ La evolución del Launcher se organizó en sprints secuenciales para entregar fu
 ---
 
 ## Versión actual
-- AON Launcher V4.4
+- APPLauncher V4.4
 
 ## Estado
 - Producto estable

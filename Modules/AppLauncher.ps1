@@ -16,7 +16,7 @@
     }
 }
 
-function Start-AONApplication {
+function Start-AppLauncherApplication {
 
     param(
         [string]$ApplicationName,

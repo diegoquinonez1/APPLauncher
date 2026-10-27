@@ -3,12 +3,12 @@
 Describe "Sprint 6: exportación e importación de perfil" {
 
     BeforeEach {
-        $script:testRoot = New-AONTestRoot
+        $script:testRoot = New-APPLauncherTestRoot
         Add-Type -AssemblyName System.IO.Compression
         Add-Type -AssemblyName System.IO.Compression.FileSystem
-        . (Join-Path $script:AONTestRepositoryRoot "Modules\UserManager.ps1")
-        . (Join-Path $script:AONTestRepositoryRoot "Modules\CredentialManager.ps1")
-        . (Join-Path $script:AONTestRepositoryRoot "Modules\ProfileTransfer.ps1")
+        . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\UserManager.ps1")
+        . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\CredentialManager.ps1")
+        . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\ProfileTransfer.ps1")
         $script:passphrase = ConvertTo-SecureString "portable-profile-passphrase" -AsPlainText -Force
         Save-LauncherCredential `
             -Environment "DEV" `
@@ -18,7 +18,7 @@ Describe "Sprint 6: exportación e importación de perfil" {
 
     AfterEach {
         $script:passphrase.Dispose()
-        Remove-AONTestRoot $script:testRoot
+        Remove-APPLauncherTestRoot $script:testRoot
     }
 
     It "Exporta la configuración a ZIP sin incluir credenciales en texto plano" {
@@ -57,7 +57,7 @@ Describe "Sprint 6: exportación e importación de perfil" {
         $before = [IO.File]::ReadAllText((Join-Path $Global:ConfigFolder "users.json"))
         $wrongPassphrase = ConvertTo-SecureString "incorrect-profile-passphrase" -AsPlainText -Force
         try{
-            (Test-AONThrows {
+            (Test-APPLauncherThrows {
                 Import-LauncherProfile -SourcePath $destination -Passphrase $wrongPassphrase
             }) | Should Be $true
         }
@@ -106,7 +106,7 @@ Describe "Sprint 6: exportación e importación de perfil" {
             $archive.Dispose()
         }
 
-        (Test-AONThrows {
+        (Test-APPLauncherThrows {
             Import-LauncherProfile -SourcePath $destination -Passphrase $script:passphrase
         }) | Should Be $true
         (Get-ChildItem -LiteralPath $Global:BackupFolder -Directory).Count | Should Be 0

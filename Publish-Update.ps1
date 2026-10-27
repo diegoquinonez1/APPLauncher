@@ -29,7 +29,7 @@ if(
     !(Test-Path -LiteralPath $launcherVersionFile -PathType Leaf) -or
     !(Test-Path -LiteralPath $modulesDirectory -PathType Container)
 ){
-    throw "El origen no parece ser la raíz de AON Launcher."
+    throw "El origen no parece ser la raíz de APPLauncher."
 }
 
 $installedVersion = [version]::MinValue
@@ -44,7 +44,7 @@ if(!(Test-Path -LiteralPath $repositoryRoot -PathType Container)){
     New-Item -ItemType Directory -Path $repositoryRoot -Force | Out-Null
 }
 
-$packageName = "AONLauncher-$($parsedVersion.ToString(3)).zip"
+$packageName = "APPLauncher-$($parsedVersion.ToString(3)).zip"
 $packagePath = Join-Path $repositoryRoot $packageName
 $versionPath = Join-Path $repositoryRoot "version.json"
 if(
@@ -97,12 +97,12 @@ try{
         $sourceFiles += Get-ChildItem -LiteralPath $assetsDirectory -File -Recurse
     }
 
-    $executablePath = Join-Path $sourceRootPath "AONLauncher.exe"
+    $executablePath = Join-Path $sourceRootPath "APPLauncher.exe"
     if(Test-Path -LiteralPath $executablePath -PathType Leaf){
         $latestSourceTime = ($sourceFiles | Measure-Object -Property LastWriteTimeUtc -Maximum).Maximum
         $executable = Get-Item -LiteralPath $executablePath
         if($executable.LastWriteTimeUtc -lt $latestSourceTime){
-            throw "AONLauncher.exe es anterior a sus fuentes. Ejecute Build.ps1 antes de publicar una actualización."
+            throw "APPLauncher.exe es anterior a sus fuentes. Ejecute Build.ps1 antes de publicar una actualización."
         }
         $sourceFiles += Get-Item -LiteralPath $executablePath
     }
@@ -120,7 +120,7 @@ try{
             $relativePath -ne "Launcher.bat" -and
             $relativePath -ne "LanzadorHerramientasAdm.bat" -and
             $relativePath -ne "Build.ps1" -and
-            $relativePath -ne "AONLauncher.exe" -and
+            $relativePath -ne "APPLauncher.exe" -and
             $relativePath -notlike "Modules/*" -and
             $relativePath -notlike "Assets/*"
         ){

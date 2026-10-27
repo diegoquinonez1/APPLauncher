@@ -3,13 +3,13 @@
 Describe "Sprint 3: dashboard y métricas de actividad" {
 
     BeforeEach {
-        $script:testRoot = New-AONTestRoot
-        . (Join-Path $script:AONTestRepositoryRoot "Modules\LogManager.ps1")
+        $script:testRoot = New-APPLauncherTestRoot
+        . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\LogManager.ps1")
         $Global:LogFile = Join-Path $Global:LogFolder "launcher.log"
     }
 
     AfterEach {
-        Remove-AONTestRoot $script:testRoot
+        Remove-APPLauncherTestRoot $script:testRoot
     }
 
     It "Calcula última y más usada aplicación, y cuenta día y mes" {

@@ -26,7 +26,7 @@ try{
     $result = Invoke-Pester -Script $scriptFiles.FullName -PassThru
 }
 finally{
-    Remove-Item -Path Function:\global:Get-AONFormControls -ErrorAction SilentlyContinue
+    Remove-Item -Path Function:\global:Get-APPLauncherFormControls -ErrorAction SilentlyContinue
 }
 
 if($result.FailedCount -gt 0){

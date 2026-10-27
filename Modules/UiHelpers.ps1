@@ -6,7 +6,7 @@
 
     [System.Windows.Forms.MessageBox]::Show(
         $Message,
-        "AON Launcher",
+        "APPLauncher",
         [System.Windows.Forms.MessageBoxButtons]::OK,
         [System.Windows.Forms.MessageBoxIcon]::Information
     )

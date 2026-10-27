@@ -3,8 +3,8 @@
 Describe "Sprint 5: expiración y protección de credenciales" {
 
     BeforeEach {
-        $script:testRoot = New-AONTestRoot
-        . (Join-Path $script:AONTestRepositoryRoot "Modules\CredentialManager.ps1")
+        $script:testRoot = New-APPLauncherTestRoot
+        . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\CredentialManager.ps1")
         $script:now = [datetime]::ParseExact(
             "2026-10-23T12:00:00",
             "yyyy-MM-ddTHH:mm:ss",
@@ -13,7 +13,7 @@ Describe "Sprint 5: expiración y protección de credenciales" {
     }
 
     AfterEach {
-        Remove-AONTestRoot $script:testRoot
+        Remove-APPLauncherTestRoot $script:testRoot
     }
 
     It "Clasifica válida, próxima a expirar y expirada usando la vigencia de ocho horas" {

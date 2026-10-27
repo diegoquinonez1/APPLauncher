@@ -56,7 +56,7 @@ function Get-SafeUpdateRelativePath {
         "Launcher.version",
         "Launcher.bat",
         "LanzadorHerramientasAdm.bat",
-        "AONLauncher.exe",
+        "APPLauncher.exe",
         "Build.ps1",
         "Modules",
         "Assets"

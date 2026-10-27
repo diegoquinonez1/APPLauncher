@@ -10,7 +10,7 @@ $script:AllowedLauncherUpdateRoots = @(
     "Launcher.version",
     "Launcher.bat",
     "LanzadorHerramientasAdm.bat",
-    "AONLauncher.exe",
+    "APPLauncher.exe",
     "Build.ps1",
     "Modules",
     "Assets"
@@ -139,7 +139,7 @@ function Expand-VerifiedLauncherUpdate {
     }
 
     $temporaryRoot = Join-Path ([IO.Path]::GetTempPath()) (
-        "AONLauncherUpdate_" + [guid]::NewGuid().ToString("N")
+        "APPLauncherUpdate_" + [guid]::NewGuid().ToString("N")
     )
     $stagePath = Join-Path $temporaryRoot "stage"
     New-Item -ItemType Directory -Path $stagePath -Force | Out-Null

@@ -306,7 +306,7 @@ $btnLaunch.Add_Click({
 
     try{
 
-        Start-AONApplication `
+        Start-AppLauncherApplication `
             $cmbApp.Text `
             $cmbEnv.Text `
             $cmbUser.Text

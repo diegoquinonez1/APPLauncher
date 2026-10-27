@@ -1,6 +1,6 @@
 ﻿. (Join-Path $PSScriptRoot "TestSupport.ps1")
 
-function New-AONUpdateFixture {
+function New-APPLauncherUpdateFixture {
 
     param(
         [string]$Root,
@@ -14,7 +14,7 @@ function New-AONUpdateFixture {
     New-Item -ItemType Directory -Path $repository,$stage -Force | Out-Null
 
     $stagedFile = Join-Path $stage ($RelativePath.Replace("/", [IO.Path]::DirectorySeparatorChar))
-    New-AONTestFile -Path $stagedFile -Content $Content | Out-Null
+    New-APPLauncherTestFile -Path $stagedFile -Content $Content | Out-Null
     $fileHash = (Get-FileHash -LiteralPath $stagedFile -Algorithm SHA256).Hash.ToLowerInvariant()
     $updateManifest = [PSCustomObject]@{
         formatVersion = 1
@@ -24,7 +24,7 @@ function New-AONUpdateFixture {
     [IO.File]::WriteAllText((Join-Path $stage "update.json"), $updateManifest)
 
     Add-Type -AssemblyName System.IO.Compression.FileSystem
-    $packageName = "AONLauncher-$Version.zip"
+    $packageName = "APPLauncher-$Version.zip"
     $packagePath = Join-Path $repository $packageName
     [IO.Compression.ZipFile]::CreateFromDirectory($stage, $packagePath)
     $packageHash = (Get-FileHash -LiteralPath $packagePath -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -47,18 +47,18 @@ function New-AONUpdateFixture {
 Describe "Sprint 7: comprobación y publicación de actualizaciones" {
 
     BeforeEach {
-        $script:testRoot = New-AONTestRoot
+        $script:testRoot = New-APPLauncherTestRoot
         Add-Type -AssemblyName System.IO.Compression
         Add-Type -AssemblyName System.IO.Compression.FileSystem
-        . (Join-Path $script:AONTestRepositoryRoot "Modules\UpdateManager.ps1")
+        . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\UpdateManager.ps1")
     }
 
     AfterEach {
-        Remove-AONTestRoot $script:testRoot
+        Remove-APPLauncherTestRoot $script:testRoot
     }
 
     It "Detecta una versión superior y verifica el ZIP y los archivos al preparar el paquete" {
-        $fixture = New-AONUpdateFixture -Root $script:testRoot
+        $fixture = New-APPLauncherUpdateFixture -Root $script:testRoot
         $release = Get-LauncherUpdateRelease -UpdateSource $fixture.Repository
 
         $release.IsUpdateAvailable | Should Be $true
@@ -70,27 +70,27 @@ Describe "Sprint 7: comprobación y publicación de actualizaciones" {
             $prepared.Files.Count | Should Be 1
         }
         finally{
-            Remove-AONTestRoot $prepared.TemporaryRoot
+            Remove-APPLauncherTestRoot $prepared.TemporaryRoot
         }
     }
 
     It "Indica que no hay actualización cuando la versión disponible no es superior" {
-        $fixture = New-AONUpdateFixture -Root $script:testRoot -Version "4.4.0"
+        $fixture = New-APPLauncherUpdateFixture -Root $script:testRoot -Version "4.4.0"
 
         (Get-LauncherUpdateRelease -UpdateSource $fixture.Repository).IsUpdateAvailable | Should Be $false
     }
 
     It "Rechaza un hash externo incorrecto y un hash de archivo manipulado" {
-        $fixture = New-AONUpdateFixture -Root $script:testRoot
+        $fixture = New-APPLauncherUpdateFixture -Root $script:testRoot
         $manifestPath = Join-Path $fixture.Repository "version.json"
         $manifest = [IO.File]::ReadAllText($manifestPath) | ConvertFrom-Json
         $manifest.sha256 = "0" * 64
         [IO.File]::WriteAllText($manifestPath, ($manifest | ConvertTo-Json))
 
         $release = Get-LauncherUpdateRelease -UpdateSource $fixture.Repository
-        (Test-AONThrows { Expand-VerifiedLauncherUpdate -Release $release }) | Should Be $true
+        (Test-APPLauncherThrows { Expand-VerifiedLauncherUpdate -Release $release }) | Should Be $true
 
-        $fixture = New-AONUpdateFixture -Root (Join-Path $script:testRoot "tampered")
+        $fixture = New-APPLauncherUpdateFixture -Root (Join-Path $script:testRoot "tampered")
         $archive = [IO.Compression.ZipFile]::Open($fixture.PackagePath, [IO.Compression.ZipArchiveMode]::Update)
         try{
             $entry = $archive.GetEntry("Launcher.ps1")
@@ -114,7 +114,7 @@ Describe "Sprint 7: comprobación y publicación de actualizaciones" {
         [IO.File]::WriteAllText($manifestPath, ($manifest | ConvertTo-Json))
         $release = Get-LauncherUpdateRelease -UpdateSource $fixture.Repository
 
-        (Test-AONThrows { Expand-VerifiedLauncherUpdate -Release $release }) | Should Be $true
+        (Test-APPLauncherThrows { Expand-VerifiedLauncherUpdate -Release $release }) | Should Be $true
     }
 
     It "Rechaza rutas fuera de los directorios permitidos" {
@@ -124,7 +124,7 @@ Describe "Sprint 7: comprobación y publicación de actualizaciones" {
             "C:/Windows/win.ini",
             "Config/settings.json"
         )){
-            (Test-AONThrows { Get-SafeLauncherUpdateRelativePath $path }) | Should Be $true
+            (Test-APPLauncherThrows { Get-SafeLauncherUpdateRelativePath $path }) | Should Be $true
         }
 
         (Get-SafeLauncherUpdateRelativePath "Modules/Launcher.ps1") | Should Be "Modules/Launcher.ps1"
@@ -133,10 +133,10 @@ Describe "Sprint 7: comprobación y publicación de actualizaciones" {
     It "Publica varias versiones en el mismo repositorio y rechaza downgrade" {
         $source = Join-Path $script:testRoot "source"
         New-Item -ItemType Directory -Path $source -Force | Out-Null
-        Copy-Item -LiteralPath (Join-Path $script:AONTestRepositoryRoot "Launcher.ps1") -Destination $source
-        Copy-Item -LiteralPath (Join-Path $script:AONTestRepositoryRoot "Launcher.version") -Destination $source
-        Copy-Item -LiteralPath (Join-Path $script:AONTestRepositoryRoot "Publish-Update.ps1") -Destination $script:testRoot
-        Copy-Item -LiteralPath (Join-Path $script:AONTestRepositoryRoot "Modules") -Destination $source -Recurse
+        Copy-Item -LiteralPath (Join-Path $script:APPLauncherTestRepositoryRoot "Launcher.ps1") -Destination $source
+        Copy-Item -LiteralPath (Join-Path $script:APPLauncherTestRepositoryRoot "Launcher.version") -Destination $source
+        Copy-Item -LiteralPath (Join-Path $script:APPLauncherTestRepositoryRoot "Publish-Update.ps1") -Destination $script:testRoot
+        Copy-Item -LiteralPath (Join-Path $script:APPLauncherTestRepositoryRoot "Modules") -Destination $source -Recurse
         $repository = Join-Path $script:testRoot "published"
         $publisher = Join-Path $script:testRoot "Publish-Update.ps1"
 
@@ -145,24 +145,24 @@ Describe "Sprint 7: comprobación y publicación de actualizaciones" {
 
         $first.Version | Should Be "4.5.0"
         $second.Version | Should Be "4.6.0"
-        Test-Path -LiteralPath (Join-Path $repository "AONLauncher-4.5.0.zip") | Should Be $true
+        Test-Path -LiteralPath (Join-Path $repository "APPLauncher-4.5.0.zip") | Should Be $true
         (([IO.File]::ReadAllText((Join-Path $repository "version.json")) | ConvertFrom-Json).version) | Should Be "4.6.0"
-        (Test-AONThrows {
+        (Test-APPLauncherThrows {
             & $publisher -Version "4.4.9" -RepositoryPath $repository -SourceRoot $source | Out-Null
         }) | Should Be $true
     }
 
-    It "Rechaza un AONLauncher.exe anterior a sus fuentes" {
+    It "Rechaza un APPLauncher.exe anterior a sus fuentes" {
         $source = Join-Path $script:testRoot "stale-source"
         New-Item -ItemType Directory -Path $source -Force | Out-Null
-        Copy-Item -LiteralPath (Join-Path $script:AONTestRepositoryRoot "Launcher.ps1") -Destination $source
-        Copy-Item -LiteralPath (Join-Path $script:AONTestRepositoryRoot "Launcher.version") -Destination $source
-        Copy-Item -LiteralPath (Join-Path $script:AONTestRepositoryRoot "Modules") -Destination $source -Recurse
-        $staleExe = New-AONTestFile (Join-Path $source "AONLauncher.exe") "old executable"
+        Copy-Item -LiteralPath (Join-Path $script:APPLauncherTestRepositoryRoot "Launcher.ps1") -Destination $source
+        Copy-Item -LiteralPath (Join-Path $script:APPLauncherTestRepositoryRoot "Launcher.version") -Destination $source
+        Copy-Item -LiteralPath (Join-Path $script:APPLauncherTestRepositoryRoot "Modules") -Destination $source -Recurse
+        $staleExe = New-APPLauncherTestFile (Join-Path $source "APPLauncher.exe") "old executable"
         (Get-Item -LiteralPath $staleExe).LastWriteTimeUtc = [datetime]::UtcNow.AddDays(-2)
-        $publisher = Join-Path $script:AONTestRepositoryRoot "Publish-Update.ps1"
+        $publisher = Join-Path $script:APPLauncherTestRepositoryRoot "Publish-Update.ps1"
 
-        (Test-AONThrows {
+        (Test-APPLauncherThrows {
             & $publisher -Version "4.5.0" -RepositoryPath (Join-Path $script:testRoot "stale-published") -SourceRoot $source | Out-Null
         }) | Should Be $true
     }

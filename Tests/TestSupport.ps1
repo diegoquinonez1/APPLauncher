@@ -1,12 +1,12 @@
-﻿$script:AONTestRepositoryRoot = Split-Path -Parent $PSScriptRoot
+﻿$script:APPLauncherTestRepositoryRoot = Split-Path -Parent $PSScriptRoot
 
-if(-not ("AONLauncherTestControlWalker" -as [type])){
+if(-not ("APPLauncherTestControlWalker" -as [type])){
     Add-Type -TypeDefinition @"
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
-public static class AONLauncherTestControlWalker
+public static class APPLauncherTestControlWalker
 {
     public static object[] GetDescendants(object root)
     {
@@ -37,10 +37,10 @@ public static class AONLauncherTestControlWalker
 "@
 }
 
-function New-AONTestRoot {
+function New-APPLauncherTestRoot {
 
     $root = Join-Path ([IO.Path]::GetTempPath()) (
-        "AONLauncherTests_" + [guid]::NewGuid().ToString("N")
+        "APPLauncherTests_" + [guid]::NewGuid().ToString("N")
     )
     $Global:ConfigFolder = Join-Path $root "Config"
     $Global:BackupFolder = Join-Path $root "Backups"
@@ -90,7 +90,7 @@ function New-AONTestRoot {
     return $root
 }
 
-function Remove-AONTestRoot {
+function Remove-APPLauncherTestRoot {
 
     param(
         [string]$Path
@@ -139,7 +139,7 @@ function Backup-Configuration {
     return $backupPath
 }
 
-function New-AONTestFile {
+function New-APPLauncherTestFile {
 
     param(
         [string]$Path,
@@ -154,7 +154,7 @@ function New-AONTestFile {
     return $Path
 }
 
-function Test-AONThrows {
+function Test-APPLauncherThrows {
 
     param(
         [scriptblock]$Action
@@ -169,7 +169,7 @@ function Test-AONThrows {
     }
 }
 
-function Invoke-AONWinFormsDialog {
+function Invoke-AppLauncherWinFormsDialog {
 
     param(
         [string]$Title,
@@ -180,51 +180,51 @@ function Invoke-AONWinFormsDialog {
     Add-Type -AssemblyName System.Windows.Forms
     Add-Type -AssemblyName System.Drawing
 
-    $Global:AONUITestTitle = $Title
-    $Global:AONUITestObserve = $OnShown.GetNewClosure()
-    $Global:AONUITestForm = $null
-    $Global:AONUITestFailure = $null
-    $Global:AONUITestTimer = New-Object System.Windows.Forms.Timer
-    $Global:AONUITestTimer.Interval = 50
-    $Global:AONUITestTimer.Add_Tick({
+    $Global:APPLauncherUITestTitle = $Title
+    $Global:APPLauncherUITestObserve = $OnShown.GetNewClosure()
+    $Global:APPLauncherUITestForm = $null
+    $Global:APPLauncherUITestFailure = $null
+    $Global:APPLauncherUITestTimer = New-Object System.Windows.Forms.Timer
+    $Global:APPLauncherUITestTimer.Interval = 50
+    $Global:APPLauncherUITestTimer.Add_Tick({
         foreach($form in [System.Windows.Forms.Application]::OpenForms){
-            if($form.Text -ne $Global:AONUITestTitle){
+            if($form.Text -ne $Global:APPLauncherUITestTitle){
                 continue
             }
 
-            $Global:AONUITestForm = $form
+            $Global:APPLauncherUITestForm = $form
             $form.WindowState = [System.Windows.Forms.FormWindowState]::Minimized
             try{
-                & $Global:AONUITestObserve $form
+                & $Global:APPLauncherUITestObserve $form
             }
             catch{
-                $Global:AONUITestFailure = $_.Exception.Message
+                $Global:APPLauncherUITestFailure = $_.Exception.Message
             }
             finally{
                 $form.Close()
-                $Global:AONUITestTimer.Stop()
+                $Global:APPLauncherUITestTimer.Stop()
             }
             break
         }
     })
 
-    $Global:AONUITestTimer.Start()
+    $Global:APPLauncherUITestTimer.Start()
     try{
         & $ShowForm
     }
     finally{
-        $Global:AONUITestTimer.Stop()
-        $Global:AONUITestTimer.Dispose()
+        $Global:APPLauncherUITestTimer.Stop()
+        $Global:APPLauncherUITestTimer.Dispose()
     }
 
-    $testFailure = $Global:AONUITestFailure
-    $testForm = $Global:AONUITestForm
+    $testFailure = $Global:APPLauncherUITestFailure
+    $testForm = $Global:APPLauncherUITestForm
     foreach($variableName in @(
-        "AONUITestTitle",
-        "AONUITestObserve",
-        "AONUITestForm",
-        "AONUITestFailure",
-        "AONUITestTimer"
+        "APPLauncherUITestTitle",
+        "APPLauncherUITestObserve",
+        "APPLauncherUITestForm",
+        "APPLauncherUITestFailure",
+        "APPLauncherUITestTimer"
     )){
         Remove-Variable -Name $variableName -Scope Global -Force -ErrorAction SilentlyContinue
     }

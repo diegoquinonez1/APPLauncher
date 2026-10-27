@@ -113,7 +113,7 @@
 
     foreach($app in $startupApps){
 
-        Start-AONApplication `
+        Start-AppLauncherApplication `
             $app `
             $Project.environment `
             $Project.user

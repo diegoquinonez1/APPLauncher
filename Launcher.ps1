@@ -66,7 +66,7 @@ $users = Get-Users
 # ==================================
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = "AON Launcher V$($script:LauncherVersion.ToString(3))"
+$form.Text = "APPLauncher V$($script:LauncherVersion.ToString(3))"
 $screenArea = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
 $form.AutoScroll = $false
 $form.MinimumSize = New-Object Drawing.Size(
@@ -526,7 +526,7 @@ $btnSSMS.Add_Click({
 
     Invoke-Safely {
 
-        Start-AONApplication `
+        Start-AppLauncherApplication `
             "SSMS" `
             (Get-SelectedEnvironment) `
             $cmbUser.Text
@@ -550,7 +550,7 @@ $btnVS.Add_Click({
 
     Invoke-Safely {
 
-        Start-AONApplication `
+        Start-AppLauncherApplication `
             "VisualStudio" `
             (Get-SelectedEnvironment) `
             $cmbUser.Text
@@ -574,7 +574,7 @@ $btnCode.Add_Click({
 
     Invoke-Safely {
 
-        Start-AONApplication `
+        Start-AppLauncherApplication `
             "VSCode" `
             (Get-SelectedEnvironment) `
             $cmbUser.Text
@@ -598,7 +598,7 @@ $btnReport.Add_Click({
 
     Invoke-Safely {
 
-        Start-AONApplication `
+        Start-AppLauncherApplication `
             "ReportBuilder" `
             (Get-SelectedEnvironment) `
             $cmbUser.Text
@@ -699,7 +699,7 @@ $btnExportProfile.Size = New-Object Drawing.Size(140,40)
 $btnExportProfile.Add_Click({
 
     $dialog = New-Object System.Windows.Forms.SaveFileDialog
-    $dialog.Filter = "Perfil AON (*.profile.zip)|*.profile.zip"
+    $dialog.Filter = "Perfil APPLauncher (*.profile.zip)|*.profile.zip"
     $dialog.DefaultExt = "profile.zip"
     $dialog.AddExtension = $true
     $dialog.FileName = "$env:USERNAME.profile.zip"
@@ -742,7 +742,7 @@ $btnImportProfile.Size = New-Object Drawing.Size(140,40)
 $btnImportProfile.Add_Click({
 
     $dialog = New-Object System.Windows.Forms.OpenFileDialog
-    $dialog.Filter = "Perfil AON (*.profile.zip)|*.profile.zip|ZIP (*.zip)|*.zip"
+    $dialog.Filter = "Perfil APPLauncher (*.profile.zip)|*.profile.zip|ZIP (*.zip)|*.zip"
     $dialog.CheckFileExists = $true
 
     if($dialog.ShowDialog($form) -ne [System.Windows.Forms.DialogResult]::OK){

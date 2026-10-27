@@ -3,17 +3,17 @@
 Describe "Sprint 1: lanzador dinámico de proyectos" {
 
     BeforeEach {
-        $script:testRoot = New-AONTestRoot
-        . (Join-Path $script:AONTestRepositoryRoot "Modules\ProfileManager.ps1")
-        . (Join-Path $script:AONTestRepositoryRoot "Modules\ApplicationManager.ps1")
-        . (Join-Path $script:AONTestRepositoryRoot "Modules\LogManager.ps1")
-        . (Join-Path $script:AONTestRepositoryRoot "Modules\AppLauncher.ps1")
-        . (Join-Path $script:AONTestRepositoryRoot "Modules\ProjectLauncher.ps1")
+        $script:testRoot = New-APPLauncherTestRoot
+        . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\ProfileManager.ps1")
+        . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\ApplicationManager.ps1")
+        . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\LogManager.ps1")
+        . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\AppLauncher.ps1")
+        . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\ProjectLauncher.ps1")
         $Global:LogFile = Join-Path $Global:LogFolder "launcher.log"
     }
 
     AfterEach {
-        Remove-AONTestRoot $script:testRoot
+        Remove-APPLauncherTestRoot $script:testRoot
     }
 
     It "Rechaza perfiles sin acciones, entorno o usuario" {
@@ -27,15 +27,15 @@ Describe "Sprint 1: lanzador dinámico de proyectos" {
         }
         Save-JsonFile "projects.json" ([PSCustomObject]@{ projects = @($project) })
 
-        (Test-AONThrows { Start-ProjectProfile -Project $project }) | Should Be $true
+        (Test-APPLauncherThrows { Start-ProjectProfile -Project $project }) | Should Be $true
 
         $project.startupApps = @("SSMS")
         $project.environment = ""
-        (Test-AONThrows { Start-ProjectProfile -Project $project }) | Should Be $true
+        (Test-APPLauncherThrows { Start-ProjectProfile -Project $project }) | Should Be $true
 
         $project.environment = "DEV"
         $project.user = ""
-        (Test-AONThrows { Start-ProjectProfile -Project $project }) | Should Be $true
+        (Test-APPLauncherThrows { Start-ProjectProfile -Project $project }) | Should Be $true
     }
 
     It "Rechaza nombres duplicados y aplicaciones no soportadas" {
@@ -43,7 +43,7 @@ Describe "Sprint 1: lanzador dinámico de proyectos" {
         $second = [PSCustomObject]@{ name = "Duplicate"; startupApps = @(); solution = ""; folder = $script:testRoot }
         Save-JsonFile "projects.json" ([PSCustomObject]@{ projects = @($first, $second) })
 
-        (Test-AONThrows { Start-ProjectProfile -Project $first }) | Should Be $true
+        (Test-APPLauncherThrows { Start-ProjectProfile -Project $first }) | Should Be $true
 
         $unsupported = [PSCustomObject]@{
             name = "Unsupported"
@@ -54,11 +54,11 @@ Describe "Sprint 1: lanzador dinámico de proyectos" {
             folder = ""
         }
         Save-JsonFile "projects.json" ([PSCustomObject]@{ projects = @($unsupported) })
-        (Test-AONThrows { Start-ProjectProfile -Project $unsupported }) | Should Be $true
+        (Test-APPLauncherThrows { Start-ProjectProfile -Project $unsupported }) | Should Be $true
     }
 
     It "Valida todas las rutas antes de iniciar una aplicación" {
-        $application = New-AONTestFile (Join-Path $script:testRoot "apps\ssms.exe")
+        $application = New-APPLauncherTestFile (Join-Path $script:testRoot "apps\ssms.exe")
         $applications = Get-Applications
         $applications.SSMS = $application
         Save-Applications $applications
@@ -72,11 +72,11 @@ Describe "Sprint 1: lanzador dinámico de proyectos" {
             folder = ""
         }
         Save-JsonFile "projects.json" ([PSCustomObject]@{ projects = @($project) })
-        Mock Start-AONApplication {}
+        Mock Start-AppLauncherApplication {}
         Mock Start-Process {}
 
-        (Test-AONThrows { Start-ProjectProfile -Project $project }) | Should Be $true
-        Assert-MockCalled Start-AONApplication -Times 0 -Scope It
+        (Test-APPLauncherThrows { Start-ProjectProfile -Project $project }) | Should Be $true
+        Assert-MockCalled Start-AppLauncherApplication -Times 0 -Scope It
         Assert-MockCalled Start-Process -Times 0 -Scope It
         (Get-LauncherLogs).Count | Should Be 0
     }
@@ -104,7 +104,7 @@ Describe "Sprint 1: lanzador dinámico de proyectos" {
     }
 
     It "Inicia las aplicaciones configuradas después de validar el perfil" {
-        $application = New-AONTestFile (Join-Path $script:testRoot "apps\ssms.exe")
+        $application = New-APPLauncherTestFile (Join-Path $script:testRoot "apps\ssms.exe")
         $applications = Get-Applications
         $applications.SSMS = $application
         Save-Applications $applications
@@ -135,12 +135,12 @@ Describe "Sprint 1: lanzador dinámico de proyectos" {
 Describe "Sprint 2: administración de proyectos" {
 
     BeforeEach {
-    $script:testRoot = New-AONTestRoot
-        . (Join-Path $script:AONTestRepositoryRoot "Modules\ProfileManager.ps1")
+    $script:testRoot = New-APPLauncherTestRoot
+        . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\ProfileManager.ps1")
     }
 
     AfterEach {
-        Remove-AONTestRoot $script:testRoot
+        Remove-APPLauncherTestRoot $script:testRoot
     }
 
     It "Crea, actualiza y elimina perfiles persistidos" {
@@ -161,10 +161,10 @@ Describe "Sprint 2: administración de proyectos" {
         Add-Project -Name "One" -Environment "DEV" -User "test-user" -Solution "" -Folder "" -StartupApps @("SSMS")
         Add-Project -Name "Two" -Environment "QC" -User "another-user" -Solution "" -Folder "" -StartupApps @("VSCode")
 
-        (Test-AONThrows {
+        (Test-APPLauncherThrows {
             Add-Project -Name "One" -Environment "DEV" -User "test-user" -Solution "" -Folder "" -StartupApps @("SSMS")
         }) | Should Be $true
-        (Test-AONThrows {
+        (Test-APPLauncherThrows {
             Update-Project -OriginalName "Two" -Name "One" -Environment "QC" -User "another-user" -Solution "" -Folder "" -StartupApps @("VSCode")
         }) | Should Be $true
         @((Get-Projects).projects).Count | Should Be 2

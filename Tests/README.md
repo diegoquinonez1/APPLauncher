@@ -1,4 +1,4 @@
-# Pruebas automatizadas de AON Launcher
+# Pruebas automatizadas de APPLauncher
 
 ## Ejecución
 

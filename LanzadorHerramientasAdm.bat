@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Lanzador de Herramientas AON
+title Lanzador de Herramientas APPLauncher
 
 :: Usuario por defecto
 set "USUARIO=adm-A0836618"

@@ -1,4 +1,4 @@
-# AON Launcher - Roadmap de Evolución
+# APPLauncher - Roadmap de Evolución
 
 ## Resumen ejecutivo
 
@@ -7,7 +7,7 @@ El Launcher ha cerrado los sprints 1 a 7, incluyendo exportación/importación d
 ## Estado actual
 
 ### Versión actual
-- AON Launcher V4.4
+- APPLauncher V4.4
 - Estado: Producto estable, listo para uso diario.
 - Sprints 1 a 7 cerrados; arquitectura de plugins y distribución corporativa siguen pendientes.
 
@@ -304,10 +304,10 @@ La actualización se prepara en una carpeta temporal, verifica hashes y rutas an
 `Publish-Update.ps1` genera el ZIP, `update.json` y `version.json`. Ejemplo de publicación:
 
 ```powershell
-.\Publish-Update.ps1 -Version 4.5.0 -RepositoryPath '\\servidor\AONLauncher\releases'
+.\Publish-Update.ps1 -Version 4.5.0 -RepositoryPath '\\servidor\APPLauncher\releases'
 ```
 
-El origen se configura desde la pantalla del Launcher o en `Config/settings.json` usando `updateSource`. Si se distribuye `AONLauncher.exe`, debe reconstruirse con `Build.ps1` antes de publicar; el publicador rechaza un ejecutable más antiguo que sus fuentes. Mantenga permisos de escritura restringidos en el recurso compartido.
+El origen se configura desde la pantalla del Launcher o en `Config/settings.json` usando `updateSource`. Si se distribuye `APPLauncher.exe`, debe reconstruirse con `Build.ps1` antes de publicar; el publicador rechaza un ejecutable más antiguo que sus fuentes. Mantenga permisos de escritura restringidos en el recurso compartido.
 
 ### Arquitectura de plugins
 Posibilidad de agregar:
@@ -320,7 +320,7 @@ Sin modificar el núcleo del Launcher.
 
 ### Distribución corporativa
 Instalador formal:
-- `AON Launcher Setup.exe`
+- `APPLauncher Setup.exe`
 
 Con:
 - Instalación automática.
@@ -334,7 +334,7 @@ Con:
 El producto actual se encuentra en una etapa de madurez operativa y está preparado para evolucionar hacia una plataforma más modular, segura y escalable.
 
 ### Versión actual
-- AON Launcher V4.4
+- APPLauncher V4.4
 
 ### Estado
 - Producto estable

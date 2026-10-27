@@ -1,7 +1,7 @@
 ﻿$ErrorActionPreference = "Stop"
 
 $sourcePath = Join-Path $PSScriptRoot "Launcher.ps1"
-$outputPath = Join-Path $PSScriptRoot "AONLauncher.exe"
+$outputPath = Join-Path $PSScriptRoot "APPLauncher.exe"
 $iconPath = Join-Path $PSScriptRoot "Assets\favicon.ico"
 
 foreach($requiredPath in @($sourcePath, $iconPath)){
