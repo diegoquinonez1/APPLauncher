@@ -68,15 +68,14 @@ $users = Get-Users
 $form = New-Object System.Windows.Forms.Form
 $form.Text = "AON Launcher V$($script:LauncherVersion.ToString(3))"
 $screenArea = [System.Windows.Forms.Screen]::PrimaryScreen.WorkingArea
-$form.AutoScroll = $true
-$form.AutoScrollMinSize = New-Object Drawing.Size(920,960)
+$form.AutoScroll = $false
 $form.MinimumSize = New-Object Drawing.Size(
-    [Math]::Min(950, $screenArea.Width),
-    [Math]::Min(600, $screenArea.Height)
+    [Math]::Min(820, $screenArea.Width),
+    [Math]::Min(680, $screenArea.Height)
 )
 $form.Size = New-Object Drawing.Size(
-    [Math]::Min(950, $screenArea.Width),
-    [Math]::Min(800, $screenArea.Height)
+    [Math]::Min(1000, $screenArea.Width),
+    [Math]::Min(760, $screenArea.Height)
 )
 $form.StartPosition = "CenterScreen"
 $form.MaximizeBox = $true
@@ -154,19 +153,27 @@ $form.Controls.Add($grpEnv)
 
 $rbDev = New-Object System.Windows.Forms.RadioButton
 $rbDev.Text = "DEV"
-$rbDev.Location = New-Object Drawing.Point(20,25)
+$rbDev.AutoSize = $true
+$rbDev.Margin = New-Object System.Windows.Forms.Padding(3,7,8,3)
 
 $rbQc = New-Object System.Windows.Forms.RadioButton
 $rbQc.Text = "QC"
-$rbQc.Location = New-Object Drawing.Point(20,60)
+$rbQc.AutoSize = $true
+$rbQc.Margin = New-Object System.Windows.Forms.Padding(3,7,8,3)
 
 $rbProd = New-Object System.Windows.Forms.RadioButton
 $rbProd.Text = "PROD"
-$rbProd.Location = New-Object Drawing.Point(20,95)
+$rbProd.AutoSize = $true
+$rbProd.Margin = New-Object System.Windows.Forms.Padding(3,7,3,3)
 
-$grpEnv.Controls.Add($rbDev)
-$grpEnv.Controls.Add($rbQc)
-$grpEnv.Controls.Add($rbProd)
+$environmentOptions = New-Object System.Windows.Forms.FlowLayoutPanel
+$environmentOptions.Location = New-Object Drawing.Point(7,17)
+$environmentOptions.Size = New-Object Drawing.Size(265,38)
+$environmentOptions.FlowDirection = [System.Windows.Forms.FlowDirection]::LeftToRight
+$environmentOptions.WrapContents = $false
+$environmentOptions.AutoScroll = $true
+$environmentOptions.Controls.AddRange(@($rbDev, $rbQc, $rbProd))
+$grpEnv.Controls.Add($environmentOptions)
 
 switch($settings.lastEnvironment){
 
@@ -328,6 +335,12 @@ function RefreshTheme {
     Set-EnvironmentTheme `
         $form `
         (Get-SelectedEnvironment)
+
+    foreach($surface in @($script:launcherThemeSurfaces)){
+        if($null -ne $surface){
+            $surface.BackColor = $form.BackColor
+        }
+    }
 }
 
 $rbDev.Add_CheckedChanged({
@@ -363,7 +376,7 @@ $grpDashboard.Location =
     New-Object Drawing.Point(20,280)
 
 $grpDashboard.Size =
-    New-Object Drawing.Size(280,450)
+    New-Object Drawing.Size(350,300)
 
 $form.Controls.Add($grpDashboard)
 
@@ -456,10 +469,10 @@ $dashboardMetricLabels = @(
 
 for($index = 0; $index -lt $dashboardMetricLabels.Count; $index++){
     $dashboardMetricLabels[$index].Location = New-Object Drawing.Point(
-        20,
-        (210 + ($index * 24))
+        12,
+        (66 + ($index * 18))
     )
-    $dashboardMetricLabels[$index].Size = New-Object Drawing.Size(240,22)
+    $dashboardMetricLabels[$index].Size = New-Object Drawing.Size(320,18)
     $dashboardMetricLabels[$index].AutoEllipsis = $true
     $grpDashboard.Controls.Add($dashboardMetricLabels[$index])
 }
@@ -475,13 +488,28 @@ $credentialStatusLabels = @(
 
 for($index = 0; $index -lt $credentialStatusLabels.Count; $index++){
     $credentialStatusLabels[$index].Location = New-Object Drawing.Point(
-        20,
-        (360 + ($index * 24))
+        12,
+        (180 + ($index * 18))
     )
-    $credentialStatusLabels[$index].Size = New-Object Drawing.Size(240,22)
+    $credentialStatusLabels[$index].Size = New-Object Drawing.Size(320,18)
     $credentialStatusLabels[$index].AutoEllipsis = $true
     $grpDashboard.Controls.Add($credentialStatusLabels[$index])
 }
+
+$lblDashUser.Visible = $false
+$lblDashEnv.Visible = $false
+$lblDashApps.Location = New-Object Drawing.Point(12,28)
+$lblDashApps.Size = New-Object Drawing.Size(155,19)
+$lblDashApps.AutoEllipsis = $true
+$lblDashProjects.Location = New-Object Drawing.Point(175,28)
+$lblDashProjects.Size = New-Object Drawing.Size(155,19)
+$lblDashProjects.AutoEllipsis = $true
+$lblDashFav.Location = New-Object Drawing.Point(12,50)
+$lblDashFav.Size = New-Object Drawing.Size(155,19)
+$lblDashFav.AutoEllipsis = $true
+$lblDashScan.Location = New-Object Drawing.Point(175,50)
+$lblDashScan.Size = New-Object Drawing.Size(155,19)
+$lblDashScan.AutoEllipsis = $true
 
 RefreshDashboard
 
@@ -1049,49 +1077,54 @@ $btnScan.Add_Click({
 
 $grpProjects = New-Object System.Windows.Forms.GroupBox
 $grpProjects.Text = "Proyectos"
-$grpProjects.Location = New-Object Drawing.Point(350,390)
-$grpProjects.Size = New-Object Drawing.Size(430,310)
-$grpProjects.Anchor = (
+$grpProjects.Size = New-Object Drawing.Size(480,180)
+
+$cmbProjectLauncher = New-Object System.Windows.Forms.ComboBox
+$cmbProjectLauncher.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList
+$cmbProjectLauncher.DisplayMember = "name"
+$cmbProjectLauncher.Location = New-Object Drawing.Point(12,34)
+$cmbProjectLauncher.Size = New-Object Drawing.Size(325,28)
+$cmbProjectLauncher.Anchor = (
     [System.Windows.Forms.AnchorStyles]::Top -bor
-    [System.Windows.Forms.AnchorStyles]::Bottom -bor
     [System.Windows.Forms.AnchorStyles]::Left -bor
     [System.Windows.Forms.AnchorStyles]::Right
 )
+$grpProjects.Controls.Add($cmbProjectLauncher)
 
-$flowProjectButtons = New-Object System.Windows.Forms.FlowLayoutPanel
-$flowProjectButtons.Location = New-Object Drawing.Point(10,25)
-$flowProjectButtons.Size = New-Object Drawing.Size(400,270)
-$flowProjectButtons.Anchor = (
+$btnLaunchProject = New-Object System.Windows.Forms.Button
+$btnLaunchProject.Text = "Iniciar"
+$btnLaunchProject.Location = New-Object Drawing.Point(345,32)
+$btnLaunchProject.Size = New-Object Drawing.Size(90,30)
+$btnLaunchProject.Anchor = (
     [System.Windows.Forms.AnchorStyles]::Top -bor
-    [System.Windows.Forms.AnchorStyles]::Bottom -bor
-    [System.Windows.Forms.AnchorStyles]::Left -bor
     [System.Windows.Forms.AnchorStyles]::Right
 )
-$flowProjectButtons.AutoScroll = $true
-$flowProjectButtons.FlowDirection = "TopDown"
-$flowProjectButtons.WrapContents = $false
-
-$flowProjectButtons.Add_SizeChanged({
-
-    $buttonWidth = [Math]::Max(
-        120,
-        $flowProjectButtons.ClientSize.Width - 28
-    )
-
-    foreach($button in $flowProjectButtons.Controls){
-        if($button -is [System.Windows.Forms.Button]){
-            $button.Width = $buttonWidth
-        }
+$btnLaunchProject.Add_Click({
+    if($null -eq $cmbProjectLauncher.SelectedItem){
+        return
     }
 
+    Invoke-Safely {
+        Start-ProjectProfile -Project $cmbProjectLauncher.SelectedItem
+        RefreshDashboard
+    }
 })
+$grpProjects.Controls.Add($btnLaunchProject)
 
-$grpProjects.Controls.Add($flowProjectButtons)
-$form.Controls.Add($grpProjects)
+$lblProjectEmpty = New-Object System.Windows.Forms.Label
+$lblProjectEmpty.Text = "No hay proyectos configurados."
+$lblProjectEmpty.Location = New-Object Drawing.Point(14,72)
+$lblProjectEmpty.AutoSize = $true
+$grpProjects.Controls.Add($lblProjectEmpty)
 
 function Refresh-ProjectLauncher {
 
-    $flowProjectButtons.Controls.Clear()
+    $selectedProjectName = ""
+    if($null -ne $cmbProjectLauncher.SelectedItem){
+        $selectedProjectName = [string]$cmbProjectLauncher.SelectedItem.name
+    }
+
+    $cmbProjectLauncher.Items.Clear()
     $projectDefinitions = @((Get-Projects).projects)
 
     foreach($project in $projectDefinitions){
@@ -1103,33 +1136,22 @@ function Refresh-ProjectLauncher {
             continue
         }
 
-        $projectButton = New-Object System.Windows.Forms.Button
-        $projectButton.Text = [string]$project.name
-        $projectButton.Tag = $project
-        $projectButton.Size = New-Object Drawing.Size(
-            [Math]::Max(120, $flowProjectButtons.ClientSize.Width - 28),
-            42
-        )
-
-        $projectButton.Add_Click({
-            param($sender, $eventArgs)
-
-            Invoke-Safely {
-                Start-ProjectProfile -Project $sender.Tag
-                RefreshDashboard
-            }
-        })
-
-        $flowProjectButtons.Controls.Add($projectButton)
+        [void]$cmbProjectLauncher.Items.Add($project)
 
     }
 
-    if($flowProjectButtons.Controls.Count -eq 0){
-
-        $emptyProjectsLabel = New-Object System.Windows.Forms.Label
-        $emptyProjectsLabel.Text = "No hay proyectos configurados."
-        $emptyProjectsLabel.AutoSize = $true
-        $flowProjectButtons.Controls.Add($emptyProjectsLabel)
+    $lblProjectEmpty.Visible = ($cmbProjectLauncher.Items.Count -eq 0)
+    $btnLaunchProject.Enabled = ($cmbProjectLauncher.Items.Count -gt 0)
+    if($cmbProjectLauncher.Items.Count -gt 0){
+        $selectedIndex = -1
+        for($index = 0; $index -lt $cmbProjectLauncher.Items.Count; $index++){
+            if($cmbProjectLauncher.Items[$index].name -eq $selectedProjectName){
+                $selectedIndex = $index
+                break
+            }
+        }
+        if($selectedIndex -lt 0){ $selectedIndex = 0 }
+        $cmbProjectLauncher.SelectedIndex = $selectedIndex
 
     }
 
@@ -1143,31 +1165,49 @@ Refresh-ProjectLauncher
 
 $grpQuickLinks = New-Object System.Windows.Forms.GroupBox
 $grpQuickLinks.Text = "Accesos web"
-$grpQuickLinks.Location = New-Object Drawing.Point(350,710)
-$grpQuickLinks.Size = New-Object Drawing.Size(430,220)
-$grpQuickLinks.Anchor = (
-    [System.Windows.Forms.AnchorStyles]::Top -bor
-    [System.Windows.Forms.AnchorStyles]::Left -bor
-    [System.Windows.Forms.AnchorStyles]::Right
-)
+$grpQuickLinks.Size = New-Object Drawing.Size(480,150)
 
-$flowQuickLinks = New-Object System.Windows.Forms.FlowLayoutPanel
-$flowQuickLinks.Location = New-Object Drawing.Point(10,25)
-$flowQuickLinks.Size = New-Object Drawing.Size(400,140)
-$flowQuickLinks.Anchor = (
+$cmbQuickLinksMain = New-Object System.Windows.Forms.ComboBox
+$cmbQuickLinksMain.DropDownStyle = [System.Windows.Forms.ComboBoxStyle]::DropDownList
+$cmbQuickLinksMain.DisplayMember = "name"
+$cmbQuickLinksMain.Location = New-Object Drawing.Point(12,34)
+$cmbQuickLinksMain.Size = New-Object Drawing.Size(320,28)
+$cmbQuickLinksMain.Anchor = (
     [System.Windows.Forms.AnchorStyles]::Top -bor
     [System.Windows.Forms.AnchorStyles]::Left -bor
     [System.Windows.Forms.AnchorStyles]::Right
 )
-$flowQuickLinks.AutoScroll = $true
-$flowQuickLinks.FlowDirection = "TopDown"
-$flowQuickLinks.WrapContents = $false
-$grpQuickLinks.Controls.Add($flowQuickLinks)
+$grpQuickLinks.Controls.Add($cmbQuickLinksMain)
+
+$btnOpenQuickLink = New-Object System.Windows.Forms.Button
+$btnOpenQuickLink.Text = "Abrir"
+$btnOpenQuickLink.Location = New-Object Drawing.Point(340,32)
+$btnOpenQuickLink.Size = New-Object Drawing.Size(90,30)
+$btnOpenQuickLink.Anchor = (
+    [System.Windows.Forms.AnchorStyles]::Top -bor
+    [System.Windows.Forms.AnchorStyles]::Right
+)
+$btnOpenQuickLink.Add_Click({
+    if($null -eq $cmbQuickLinksMain.SelectedItem){
+        return
+    }
+
+    Invoke-Safely {
+        Open-QuickLink -Link $cmbQuickLinksMain.SelectedItem
+    }
+})
+$grpQuickLinks.Controls.Add($btnOpenQuickLink)
+
+$lblQuickLinksEmpty = New-Object System.Windows.Forms.Label
+$lblQuickLinksEmpty.Text = "No hay accesos web configurados."
+$lblQuickLinksEmpty.Location = New-Object Drawing.Point(14,72)
+$lblQuickLinksEmpty.AutoSize = $true
+$grpQuickLinks.Controls.Add($lblQuickLinksEmpty)
 
 $btnManageQuickLinks = New-Object System.Windows.Forms.Button
 $btnManageQuickLinks.Text = "Administrar accesos web"
-$btnManageQuickLinks.Location = New-Object Drawing.Point(10,175)
-$btnManageQuickLinks.Size = New-Object Drawing.Size(400,30)
+$btnManageQuickLinks.Location = New-Object Drawing.Point(12,108)
+$btnManageQuickLinks.Size = New-Object Drawing.Size(418,30)
 $btnManageQuickLinks.Anchor = (
     [System.Windows.Forms.AnchorStyles]::Bottom -bor
     [System.Windows.Forms.AnchorStyles]::Left -bor
@@ -1186,7 +1226,12 @@ $form.Controls.Add($grpQuickLinks)
 
 function Refresh-QuickLinks {
 
-    $flowQuickLinks.Controls.Clear()
+    $selectedUrl = ""
+    if($null -ne $cmbQuickLinksMain.SelectedItem){
+        $selectedUrl = [string]$cmbQuickLinksMain.SelectedItem.url
+    }
+
+    $cmbQuickLinksMain.Items.Clear()
     $links = @(Get-QuickLinks)
     $invalidLinks = 0
 
@@ -1200,35 +1245,28 @@ function Refresh-QuickLinks {
             continue
         }
 
-        $linkButton = New-Object System.Windows.Forms.Button
-        $linkButton.Text = $validatedLink.name
-        $linkButton.Tag = $validatedLink
-        $linkButton.Size = New-Object Drawing.Size(
-            [Math]::Max(120, $flowQuickLinks.ClientSize.Width - 28),
-            36
-        )
-        $linkButton.Add_Click({
-            param($control, $eventRecord)
-
-            Invoke-Safely {
-                Open-QuickLink -Link $control.Tag
-            }
-        })
-
-        $flowQuickLinks.Controls.Add($linkButton)
+        [void]$cmbQuickLinksMain.Items.Add($validatedLink)
     }
 
-    if($flowQuickLinks.Controls.Count -eq 0){
+    $lblQuickLinksEmpty.Text = if($invalidLinks -gt 0){
+        "Revise enlaces inválidos en Administrar."
+    }
+    else{
+        "No hay accesos web configurados."
+    }
 
-        $emptyLinksLabel = New-Object System.Windows.Forms.Label
-        if($invalidLinks -gt 0){
-            $emptyLinksLabel.Text = "Revise los enlaces inválidos en el gestor."
+    $lblQuickLinksEmpty.Visible = ($cmbQuickLinksMain.Items.Count -eq 0)
+    $btnOpenQuickLink.Enabled = ($cmbQuickLinksMain.Items.Count -gt 0)
+    if($cmbQuickLinksMain.Items.Count -gt 0){
+        $selectedIndex = -1
+        for($index = 0; $index -lt $cmbQuickLinksMain.Items.Count; $index++){
+            if($cmbQuickLinksMain.Items[$index].url -eq $selectedUrl){
+                $selectedIndex = $index
+                break
+            }
         }
-        else{
-            $emptyLinksLabel.Text = "No hay accesos web configurados."
-        }
-        $emptyLinksLabel.AutoSize = $true
-        $flowQuickLinks.Controls.Add($emptyLinksLabel)
+        if($selectedIndex -lt 0){ $selectedIndex = 0 }
+        $cmbQuickLinksMain.SelectedIndex = $selectedIndex
     }
 }
 
@@ -1335,6 +1373,352 @@ $form.Add_FormClosed({
 
 })
 $credentialCleanupTimer.Start()
+
+function Set-LauncherCompactLayout {
+
+    $form.SuspendLayout()
+    $form.Controls.Clear()
+    $form.AutoScroll = $false
+
+    $mainLayout = New-Object System.Windows.Forms.TableLayoutPanel
+    $mainLayout.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $mainLayout.Padding = New-Object System.Windows.Forms.Padding(8)
+    $mainLayout.ColumnCount = 1
+    $mainLayout.RowCount = 4
+    [void]$mainLayout.ColumnStyles.Add((New-Object System.Windows.Forms.ColumnStyle(
+        [System.Windows.Forms.SizeType]::Percent,
+        100
+    )))
+    [void]$mainLayout.RowStyles.Add((New-Object System.Windows.Forms.RowStyle(
+        [System.Windows.Forms.SizeType]::Absolute,
+        62
+    )))
+    [void]$mainLayout.RowStyles.Add((New-Object System.Windows.Forms.RowStyle(
+        [System.Windows.Forms.SizeType]::Absolute,
+        108
+    )))
+    [void]$mainLayout.RowStyles.Add((New-Object System.Windows.Forms.RowStyle(
+        [System.Windows.Forms.SizeType]::Percent,
+        100
+    )))
+    [void]$mainLayout.RowStyles.Add((New-Object System.Windows.Forms.RowStyle(
+        [System.Windows.Forms.SizeType]::Absolute,
+        68
+    )))
+
+    $headerLayout = New-Object System.Windows.Forms.TableLayoutPanel
+    $headerLayout.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $headerLayout.Margin = New-Object System.Windows.Forms.Padding(0,0,0,4)
+    $headerLayout.ColumnCount = 4
+    $headerLayout.RowCount = 1
+    foreach($columnWidth in @(40, 30, 20, 10)){
+        [void]$headerLayout.ColumnStyles.Add((New-Object System.Windows.Forms.ColumnStyle(
+            [System.Windows.Forms.SizeType]::Percent,
+            $columnWidth
+        )))
+    }
+    [void]$headerLayout.RowStyles.Add((New-Object System.Windows.Forms.RowStyle(
+        [System.Windows.Forms.SizeType]::Percent,
+        100
+    )))
+
+    $userHeader = New-Object System.Windows.Forms.Panel
+    $userHeader.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $lblUser.Location = New-Object Drawing.Point(4,2)
+    $cmbUser.Location = New-Object Drawing.Point(4,23)
+    $cmbUser.Size = New-Object Drawing.Size(185,28)
+    $btnUsers.Text = "Usuarios"
+    $btnUsers.Location = New-Object Drawing.Point(195,22)
+    $btnUsers.Size = New-Object Drawing.Size(100,30)
+    $userHeader.Controls.AddRange(@($lblUser, $cmbUser, $btnUsers))
+
+    $grpEnv.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $grpEnv.Margin = New-Object System.Windows.Forms.Padding(3,0,3,0)
+    $grpEnv.Size = New-Object Drawing.Size(260,58)
+
+    $environmentHeader = New-Object System.Windows.Forms.Panel
+    $environmentHeader.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $lblEnvironment.Location = New-Object Drawing.Point(4,24)
+    $lblEnvironment.Size = New-Object Drawing.Size(150,22)
+    $lblEnvironment.AutoEllipsis = $true
+    $environmentHeader.Controls.Add($lblEnvironment)
+
+    $exitHeader = New-Object System.Windows.Forms.Panel
+    $exitHeader.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $btnExit.Location = New-Object Drawing.Point(2,20)
+    $btnExit.Size = New-Object Drawing.Size(78,30)
+    $exitHeader.Controls.Add($btnExit)
+
+    $headerLayout.Controls.Add($userHeader, 0, 0)
+    $headerLayout.Controls.Add($grpEnv, 1, 0)
+    $headerLayout.Controls.Add($environmentHeader, 2, 0)
+    $headerLayout.Controls.Add($exitHeader, 3, 0)
+
+    $grpApplications = New-Object System.Windows.Forms.GroupBox
+    $grpApplications.Text = "Iniciar aplicación"
+    $grpApplications.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $grpApplications.Margin = New-Object System.Windows.Forms.Padding(0,0,0,4)
+
+    $applicationLayout = New-Object System.Windows.Forms.TableLayoutPanel
+    $applicationLayout.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $applicationLayout.Padding = New-Object System.Windows.Forms.Padding(4,6,4,2)
+    $applicationLayout.ColumnCount = 4
+    $applicationLayout.RowCount = 1
+    foreach($columnWidth in @(25,25,25,25)){
+        [void]$applicationLayout.ColumnStyles.Add((New-Object System.Windows.Forms.ColumnStyle(
+            [System.Windows.Forms.SizeType]::Percent,
+            $columnWidth
+        )))
+    }
+    [void]$applicationLayout.RowStyles.Add((New-Object System.Windows.Forms.RowStyle(
+        [System.Windows.Forms.SizeType]::Percent,
+        100
+    )))
+
+    $applicationButtons = @($btnSSMS, $btnVS, $btnCode, $btnReport)
+    for($index = 0; $index -lt $applicationButtons.Count; $index++){
+        $applicationButtons[$index].Dock = [System.Windows.Forms.DockStyle]::Fill
+        $applicationButtons[$index].Margin = New-Object System.Windows.Forms.Padding(4)
+        $applicationButtons[$index].AutoEllipsis = $true
+        $applicationLayout.Controls.Add($applicationButtons[$index], $index, 0)
+    }
+    $grpApplications.Controls.Add($applicationLayout)
+
+    $grpProjects.Controls.Clear()
+    $projectActionLayout = New-Object System.Windows.Forms.TableLayoutPanel
+    $projectActionLayout.Dock = [System.Windows.Forms.DockStyle]::Top
+    $projectActionLayout.Location = New-Object Drawing.Point(8,24)
+    $projectActionLayout.Height = 40
+    $projectActionLayout.ColumnCount = 2
+    $projectActionLayout.RowCount = 1
+    [void]$projectActionLayout.ColumnStyles.Add((New-Object System.Windows.Forms.ColumnStyle(
+        [System.Windows.Forms.SizeType]::Percent,
+        78
+    )))
+    [void]$projectActionLayout.ColumnStyles.Add((New-Object System.Windows.Forms.ColumnStyle(
+        [System.Windows.Forms.SizeType]::Percent,
+        22
+    )))
+    [void]$projectActionLayout.RowStyles.Add((New-Object System.Windows.Forms.RowStyle(
+        [System.Windows.Forms.SizeType]::Percent,
+        100
+    )))
+    $cmbProjectLauncher.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $cmbProjectLauncher.Margin = New-Object System.Windows.Forms.Padding(2)
+    $btnLaunchProject.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $btnLaunchProject.Margin = New-Object System.Windows.Forms.Padding(2)
+    $projectActionLayout.Controls.Add($cmbProjectLauncher, 0, 0)
+    $projectActionLayout.Controls.Add($btnLaunchProject, 1, 0)
+    $lblProjectEmpty.Location = New-Object Drawing.Point(12,72)
+    $grpProjects.Controls.Add($projectActionLayout)
+    $grpProjects.Controls.Add($lblProjectEmpty)
+
+    $grpQuickLinks.Controls.Clear()
+    $quickLinkActionLayout = New-Object System.Windows.Forms.TableLayoutPanel
+    $quickLinkActionLayout.Dock = [System.Windows.Forms.DockStyle]::Top
+    $quickLinkActionLayout.Location = New-Object Drawing.Point(8,24)
+    $quickLinkActionLayout.Height = 40
+    $quickLinkActionLayout.ColumnCount = 2
+    $quickLinkActionLayout.RowCount = 1
+    [void]$quickLinkActionLayout.ColumnStyles.Add((New-Object System.Windows.Forms.ColumnStyle(
+        [System.Windows.Forms.SizeType]::Percent,
+        78
+    )))
+    [void]$quickLinkActionLayout.ColumnStyles.Add((New-Object System.Windows.Forms.ColumnStyle(
+        [System.Windows.Forms.SizeType]::Percent,
+        22
+    )))
+    [void]$quickLinkActionLayout.RowStyles.Add((New-Object System.Windows.Forms.RowStyle(
+        [System.Windows.Forms.SizeType]::Percent,
+        100
+    )))
+    $cmbQuickLinksMain.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $cmbQuickLinksMain.Margin = New-Object System.Windows.Forms.Padding(2)
+    $btnOpenQuickLink.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $btnOpenQuickLink.Margin = New-Object System.Windows.Forms.Padding(2)
+    $quickLinkActionLayout.Controls.Add($cmbQuickLinksMain, 0, 0)
+    $quickLinkActionLayout.Controls.Add($btnOpenQuickLink, 1, 0)
+    $lblQuickLinksEmpty.Location = New-Object Drawing.Point(12,68)
+    $btnManageQuickLinks.Dock = [System.Windows.Forms.DockStyle]::Bottom
+    $btnManageQuickLinks.Height = 30
+    $btnManageQuickLinks.Margin = New-Object System.Windows.Forms.Padding(2)
+    $grpQuickLinks.Controls.Add($quickLinkActionLayout)
+    $grpQuickLinks.Controls.Add($lblQuickLinksEmpty)
+    $grpQuickLinks.Controls.Add($btnManageQuickLinks)
+
+    $grpFavoritesMain = New-Object System.Windows.Forms.GroupBox
+    $grpFavoritesMain.Text = "Favoritos"
+    $grpFavoritesMain.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $btnFav.Text = "Administrar favoritos"
+    $btnFav.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $btnFav.Margin = New-Object System.Windows.Forms.Padding(6)
+    $grpFavoritesMain.Controls.Add($btnFav)
+
+    $leftStack = New-Object System.Windows.Forms.TableLayoutPanel
+    $leftStack.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $leftStack.Padding = New-Object System.Windows.Forms.Padding(0,0,4,0)
+    $leftStack.ColumnCount = 1
+    $leftStack.RowCount = 3
+    foreach($rowHeight in @(42, 34, 24)){
+        [void]$leftStack.RowStyles.Add((New-Object System.Windows.Forms.RowStyle(
+            [System.Windows.Forms.SizeType]::Percent,
+            $rowHeight
+        )))
+    }
+    $grpProjects.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $grpProjects.Margin = New-Object System.Windows.Forms.Padding(0,0,0,4)
+    $grpQuickLinks.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $grpQuickLinks.Margin = New-Object System.Windows.Forms.Padding(0,0,0,4)
+    $grpFavoritesMain.Margin = New-Object System.Windows.Forms.Padding(0)
+    $leftStack.Controls.Add($grpProjects, 0, 0)
+    $leftStack.Controls.Add($grpQuickLinks, 0, 1)
+    $leftStack.Controls.Add($grpFavoritesMain, 0, 2)
+
+    $grpManagement = New-Object System.Windows.Forms.GroupBox
+    $grpManagement.Text = "Administrar"
+    $grpManagement.Dock = [System.Windows.Forms.DockStyle]::Fill
+
+    $managementLayout = New-Object System.Windows.Forms.TableLayoutPanel
+    $managementLayout.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $managementLayout.Padding = New-Object System.Windows.Forms.Padding(4,5,4,3)
+    $managementLayout.ColumnCount = 2
+    $managementLayout.RowCount = 4
+    foreach($columnWidth in @(50,50)){
+        [void]$managementLayout.ColumnStyles.Add((New-Object System.Windows.Forms.ColumnStyle(
+            [System.Windows.Forms.SizeType]::Percent,
+            $columnWidth
+        )))
+    }
+    foreach($rowHeight in @(25,25,25,25)){
+        [void]$managementLayout.RowStyles.Add((New-Object System.Windows.Forms.RowStyle(
+            [System.Windows.Forms.SizeType]::Percent,
+            $rowHeight
+        )))
+    }
+    $managementButtons = @(
+        $btnCreds,
+        $btnProjectsManager,
+        $btnLogs,
+        $btnExportProfile,
+        $btnImportProfile,
+        $btnCheckUpdates,
+        $btnUpdateSource
+    )
+    $btnProjectsManager.Text = "Administrar proyectos"
+    foreach($button in $managementButtons){
+        $button.Dock = [System.Windows.Forms.DockStyle]::Fill
+        $button.Margin = New-Object System.Windows.Forms.Padding(3)
+        $button.AutoEllipsis = $true
+    }
+    for($index = 0; $index -lt $managementButtons.Count; $index++){
+        $managementLayout.Controls.Add(
+            $managementButtons[$index],
+            ($index % 2),
+            [Math]::Floor($index / 2)
+        )
+    }
+    $grpManagement.Controls.Add($managementLayout)
+
+    $rightStack = New-Object System.Windows.Forms.TableLayoutPanel
+    $rightStack.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $rightStack.Padding = New-Object System.Windows.Forms.Padding(4,0,0,0)
+    $rightStack.ColumnCount = 1
+    $rightStack.RowCount = 2
+    [void]$rightStack.RowStyles.Add((New-Object System.Windows.Forms.RowStyle(
+        [System.Windows.Forms.SizeType]::Percent,
+        62
+    )))
+    [void]$rightStack.RowStyles.Add((New-Object System.Windows.Forms.RowStyle(
+        [System.Windows.Forms.SizeType]::Percent,
+        38
+    )))
+    $grpDashboard.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $grpDashboard.Margin = New-Object System.Windows.Forms.Padding(0,0,0,4)
+    $grpManagement.Margin = New-Object System.Windows.Forms.Padding(0)
+    $rightStack.Controls.Add($grpDashboard, 0, 0)
+    $rightStack.Controls.Add($grpManagement, 0, 1)
+
+    $workspaceLayout = New-Object System.Windows.Forms.TableLayoutPanel
+    $workspaceLayout.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $workspaceLayout.ColumnCount = 2
+    $workspaceLayout.RowCount = 1
+    [void]$workspaceLayout.ColumnStyles.Add((New-Object System.Windows.Forms.ColumnStyle(
+        [System.Windows.Forms.SizeType]::Percent,
+        56
+    )))
+    [void]$workspaceLayout.ColumnStyles.Add((New-Object System.Windows.Forms.ColumnStyle(
+        [System.Windows.Forms.SizeType]::Percent,
+        44
+    )))
+    [void]$workspaceLayout.RowStyles.Add((New-Object System.Windows.Forms.RowStyle(
+        [System.Windows.Forms.SizeType]::Percent,
+        100
+    )))
+    $workspaceLayout.Controls.Add($leftStack, 0, 0)
+    $workspaceLayout.Controls.Add($rightStack, 1, 0)
+
+    $grpStatus.Controls.Clear()
+    $grpStatus.Text = "Disponibilidad"
+    $grpStatus.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $grpStatus.Margin = New-Object System.Windows.Forms.Padding(0,4,0,0)
+    $statusFlow = New-Object System.Windows.Forms.FlowLayoutPanel
+    $statusFlow.Dock = [System.Windows.Forms.DockStyle]::Fill
+    $statusFlow.FlowDirection = [System.Windows.Forms.FlowDirection]::LeftToRight
+    $statusFlow.WrapContents = $false
+    $statusFlow.AutoScroll = $true
+    foreach($label in @($lblSSMSStatus, $lblVSStatus, $lblCodeStatus, $lblReportStatus)){
+        $label.AutoSize = $false
+        $label.Size = New-Object Drawing.Size(145,24)
+        $label.AutoEllipsis = $true
+        $label.Margin = New-Object System.Windows.Forms.Padding(4,8,2,2)
+        $statusFlow.Controls.Add($label)
+    }
+    $lblSummary.AutoSize = $false
+    $lblSummary.Size = New-Object Drawing.Size(105,24)
+    $lblSummary.Margin = New-Object System.Windows.Forms.Padding(4,8,2,2)
+    $btnScan.Text = "Reescanear"
+    $btnScan.Size = New-Object Drawing.Size(105,30)
+    $btnScan.Margin = New-Object System.Windows.Forms.Padding(4,4,2,2)
+    $statusFlow.Controls.Add($lblSummary)
+    $statusFlow.Controls.Add($btnScan)
+    $grpStatus.Controls.Add($statusFlow)
+
+    $mainLayout.Controls.Add($headerLayout, 0, 0)
+    $mainLayout.Controls.Add($grpApplications, 0, 1)
+    $mainLayout.Controls.Add($workspaceLayout, 0, 2)
+    $mainLayout.Controls.Add($grpStatus, 0, 3)
+
+    $script:launcherThemeSurfaces = @(
+        $mainLayout,
+        $headerLayout,
+        $userHeader,
+        $environmentHeader,
+        $exitHeader,
+        $grpApplications,
+        $applicationLayout,
+        $workspaceLayout,
+        $leftStack,
+        $rightStack,
+        $grpProjects,
+        $grpQuickLinks,
+        $grpFavoritesMain,
+        $grpDashboard,
+        $grpManagement,
+        $managementLayout,
+        $grpStatus,
+        $statusFlow
+    )
+    foreach($surface in $script:launcherThemeSurfaces){
+        $surface.BackColor = $form.BackColor
+    }
+
+    $form.Controls.Add($mainLayout)
+    $form.PerformLayout()
+    $form.ResumeLayout($true)
+    RefreshTheme
+}
+
+Set-LauncherCompactLayout
 
 # ==================================
 # SHOW
