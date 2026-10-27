@@ -31,12 +31,22 @@ function Write-ProjectLog {
         [string]$Project
     )
 
+    $safeEnvironment = $Environment
+    if([string]::IsNullOrWhiteSpace($safeEnvironment)){
+        $safeEnvironment = "-"
+    }
+
+    $safeUser = $User
+    if([string]::IsNullOrWhiteSpace($safeUser)){
+        $safeUser = "-"
+    }
+
     $safeProject = $Project -replace '\|', '/'
     $line =
         "{0} | PROJECT | {1} | {2} | {3}" -f `
         (Get-Date -Format "yyyy-MM-dd HH:mm:ss"),
-        $Environment,
-        $User,
+        $safeEnvironment,
+        $safeUser,
         $safeProject
 
     Add-Content `

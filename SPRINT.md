@@ -161,3 +161,9 @@ La evolución del Launcher se organizó en sprints secuenciales para entregar fu
 - Producto estable
 - Listo para uso diario
 - Sprints 1 a 7 implementados
+
+## Pruebas automatizadas
+- Suite Pester organizada por base operativa y sprints en `Tests/`.
+- Ejecutar desde la raíz con `./Tests/Run-Tests.ps1`.
+- Última ejecución: 50 pruebas aprobadas.
+- Los lanzamientos reales, la distribución compartida y la instalación/reinicialización completa quedan como validaciones de entorno; el detalle está en `Tests/README.md`.

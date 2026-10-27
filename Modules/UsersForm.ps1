@@ -218,7 +218,7 @@
         [Environment]::NewLine +
         "editarse ni eliminarse."
 
-    $formUsers.Controls
+    $formUsers.Controls.Add($lblInfo)
     
     # ==================================
     # CERRAR
