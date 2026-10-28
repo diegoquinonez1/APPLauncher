@@ -29,6 +29,20 @@ El archivo `Launcher.ps1` determina la raíz de instalación, carga los módulos
 - Exportación e importación de perfiles protegidos por frase de paso, con validación y respaldo previo.
 - Búsqueda e instalación de actualizaciones desde un repositorio configurado.
 
+## Integración con CyberArk / Okta
+
+La integración actual está diseñada para ser segura y honesta con el usuario:
+
+- Si hay credenciales reales de servicio de CyberArk configuradas, el launcher intenta reutilizarlas como fuente principal.
+- Si no existen esas credenciales ni una autenticación programática habilitada, la aplicación abre la URL interactiva de CyberArk/Okta (`https://aon.cyberark.cloud/privilegecloud/Accounts`) para que el usuario complete el login con correo, contraseña y MFA/push del celular.
+- La contraseña no se considera recuperada si el navegador solo inició la sesión interactiva y el sistema no devolvió un secreto válido.
+- El flujo manual sigue funcionando como respaldo para este alcance.
+- La lógica evita falsos positivos y evita guardar el HTML de la página de login como si fuera una contraseña.
+
+La configuración mínima esperada en `Config/settings.json` incluye propiedades base del launcher, por ejemplo `selectedUser`, `lastEnvironment`, `updateSource` y el bloque `cyberArk` con `enabled`, `loginUrl`, `interactiveLogin`, `allowManualFallback` y los safes por entorno.
+
+La app también normaliza la configuración al cargarla para evitar fallos cuando faltan propiedades obligatorias, lo que corrige el cierre por `selectedUser` ausente.
+
 ## Arquitectura
 
 `Launcher.ps1` concentra la composición de la interfaz y enlaza eventos con módulos de lógica. Los módulos activos comparten el ámbito de PowerShell al cargarse con dot-sourcing. La persistencia se separa entre configuración JSON, logs de texto, respaldos y archivos temporales.

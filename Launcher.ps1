@@ -2,6 +2,58 @@
 Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName Microsoft.VisualBasic
 
+try{
+    $launcherScriptPath = if($PSScriptRoot){
+        $PSScriptRoot
+    }
+    elseif($MyInvocation.MyCommand.Path){
+        Split-Path -Path $MyInvocation.MyCommand.Path -Parent
+    }
+    else{
+        Split-Path -Path ([System.Diagnostics.Process]::GetCurrentProcess().MainModule.FileName) -Parent
+    }
+
+    $launcherScriptPath = [System.IO.Path]::GetFullPath((Join-Path $launcherScriptPath 'Launcher.ps1'))
+    $launcherPattern = [regex]::Escape($launcherScriptPath)
+
+    $staleLauncherPids = Get-CimInstance Win32_Process -ErrorAction Stop |
+        Where-Object {
+            $_.Name -match '^(pwsh|powershell)\.exe$' -and
+            $_.ProcessId -ne $PID -and
+            $_.CommandLine -and
+            $_.CommandLine -match $launcherPattern
+        } |
+        Select-Object -ExpandProperty ProcessId -Unique
+
+    foreach($stalePid in $staleLauncherPids){
+        Stop-Process -Id $stalePid -Force -ErrorAction SilentlyContinue
+    }
+}
+catch{}
+
+if($null -ne $script:clipboardTimer){
+    try{
+        $script:clipboardTimer.Stop()
+        $script:clipboardTimer.Dispose()
+    }
+    catch{}
+    finally{
+        $script:clipboardTimer = $null
+    }
+}
+
+Remove-Variable -Name CyberArkInteractiveLoginOpened -Scope Script -Force -ErrorAction SilentlyContinue
+
+if(Test-Path Function:\Stop-ClipboardResetTimer){
+    Remove-Item Function:\Stop-ClipboardResetTimer -Force -ErrorAction SilentlyContinue
+}
+
+if(Test-Path Function:\Show-CredentialForm){
+    Remove-Item Function:\Show-CredentialForm -Force -ErrorAction SilentlyContinue
+}
+
+Remove-Variable -Name clipboardTimer -Scope Script -Force -ErrorAction SilentlyContinue
+
 # ==================================
 # ROOT
 # ==================================
@@ -35,6 +87,7 @@ else {
 . "$Root\Modules\UserManager.ps1"
 . "$Root\Modules\LogManager.ps1"
 . "$Root\Modules\ApplicationManager.ps1"
+. "$Root\Modules\CyberArkProvider.ps1"
 . "$Root\Modules\CredentialManager.ps1"
 . "$Root\Modules\FavoriteManager.ps1"
 . "$Root\Modules\QuickLinks.ps1"

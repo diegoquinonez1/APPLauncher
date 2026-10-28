@@ -27,10 +27,15 @@ Describe "Windows Forms: smoke tests de pantallas por funcionalidad" {
             $Global:APPLauncherTestPassphrase.Dispose()
             $Global:APPLauncherTestPassphrase = $null
         }
-        if($script:clipboardTimer){
-            $script:clipboardTimer.Stop()
-            $script:clipboardTimer.Dispose()
-            $script:clipboardTimer = $null
+        if($null -ne $script:clipboardTimer){
+            try{
+                $script:clipboardTimer.Stop()
+                $script:clipboardTimer.Dispose()
+            }
+            catch{}
+            finally{
+                $script:clipboardTimer = $null
+            }
         }
         Remove-APPLauncherTestRoot $script:testRoot
     }

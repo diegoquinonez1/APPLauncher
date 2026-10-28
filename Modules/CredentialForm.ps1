@@ -1,9 +1,62 @@
-﻿function Show-CredentialForm {
+﻿if($null -ne $script:clipboardTimer){
+    try{
+        $script:clipboardTimer.Stop()
+        $script:clipboardTimer.Dispose()
+    }
+    catch{}
+    finally{
+        $script:clipboardTimer = $null
+    }
+}
+
+if(Test-Path Function:\Stop-ClipboardResetTimer){
+    Remove-Item Function:\Stop-ClipboardResetTimer -Force -ErrorAction SilentlyContinue
+}
+
+if(Test-Path Function:\Show-CredentialForm){
+    Remove-Item Function:\Show-CredentialForm -Force -ErrorAction SilentlyContinue
+}
+
+Remove-Variable -Name clipboardTimer -Scope Script -Force -ErrorAction SilentlyContinue
+
+function Stop-ClipboardResetTimer {
+
+    param(
+        [System.Windows.Forms.Timer]$Timer
+    )
+
+    if($null -eq $Timer){
+        return
+    }
+
+    try{
+        $Timer.Stop()
+    }
+    catch{
+    }
+
+}
+
+function Show-CredentialForm {
 
     param(
         [string[]]$Users,
         [System.Windows.Forms.IWin32Window]$Owner
     )
+
+    if($null -ne $script:clipboardTimer){
+        try{
+            $script:clipboardTimer.Stop()
+            $script:clipboardTimer.Dispose()
+        }
+        catch{
+        }
+        finally{
+            $script:clipboardTimer = $null
+        }
+    }
+
+    Remove-Variable -Name clipboardTimer -Scope Script -Force -ErrorAction SilentlyContinue
 
     $formCred = New-Object System.Windows.Forms.Form
 
@@ -13,25 +66,32 @@
     $formCred.StartPosition = "CenterParent"
     $formCred.MaximizeBox = $false
 
-    $script:clipboardTimer =
+    $clipboardTimer =
     New-Object System.Windows.Forms.Timer
+    $script:clipboardTimer = $clipboardTimer
 
-    $script:clipboardTimer.Interval = 60000
+    $clipboardTimer.Interval = 60000
 
-    $script:clipboardTimer.Add_Tick({
+    $clipboardTimer.Add_Tick({
+
+        if($null -eq $clipboardTimer){
+            return
+        }
 
         try{
 
             [System.Windows.Forms.Clipboard]::Clear()
 
-            $lblStatus.Text =
-                "Estado: Portapapeles limpiado"
+            if($null -ne $lblStatus){
+                $lblStatus.Text =
+                    "Estado: Portapapeles limpiado"
+            }
 
         }
         catch{
         }
 
-        $script:clipboardTimer.Stop()
+        Stop-ClipboardResetTimer -Timer $clipboardTimer
 
     })
 
@@ -273,7 +333,7 @@
                 $cmbEnv.Text `
                 $cmbUser.Text
 
-            $clipboardTimer.Stop()
+            Stop-ClipboardResetTimer -Timer $clipboardTimer
             $clipboardTimer.Start()
 
             $formCred.Activate()

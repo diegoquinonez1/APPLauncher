@@ -101,6 +101,43 @@ function Remove-APPLauncherTestRoot {
     }
 }
 
+function Ensure-TestSettingsShape {
+
+    param(
+        [Parameter(Mandatory = $true)]
+        [object]$Settings
+    )
+
+    if($null -eq $Settings){
+        $Settings = [pscustomobject]@{}
+    }
+
+    foreach($property in @(
+        @{ Name = "selectedUser"; Value = "adm-A0836618" },
+        @{ Name = "lastEnvironment"; Value = "DEV" },
+        @{ Name = "updateSource"; Value = "" }
+    )){
+        if($null -eq $Settings.PSObject.Properties[$property.Name]){
+            $Settings | Add-Member -Force -NotePropertyName $property.Name -NotePropertyValue $property.Value
+        }
+    }
+
+    if($null -eq $Settings.PSObject.Properties["cyberArk"]){
+        $Settings | Add-Member -Force -NotePropertyName "cyberArk" -NotePropertyValue ([pscustomobject]@{
+            enabled = $false
+            baseUrl = $null
+            loginUrl = "https://aon.cyberark.cloud/privilegecloud/Accounts"
+            username = $null
+            password = $null
+            appId = $null
+            interactiveLogin = $true
+            allowManualFallback = $true
+        })
+    }
+
+    return $Settings
+}
+
 function Get-JsonFile {
 
     param(
@@ -112,7 +149,15 @@ function Get-JsonFile {
         throw "Test configuration not found: $FileName"
     }
 
-    return [IO.File]::ReadAllText($path) | ConvertFrom-Json
+    $data = [IO.File]::ReadAllText($path) | ConvertFrom-Json
+
+    if($FileName -eq "settings.json"){
+        $normalized = Ensure-TestSettingsShape -Settings $data
+        $normalized | ConvertTo-Json -Depth 20 | Set-Content -Path $path -Encoding UTF8
+        return $normalized
+    }
+
+    return $data
 }
 
 function Save-JsonFile {

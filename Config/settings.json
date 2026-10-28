@@ -1,6 +1,23 @@
-﻿{
-    "selectedUser":  "adm-A0836618",
-    "lastEnvironment":  "PROD",
-    "theme":  "DEV",
-    "updateSource":  "C:\\Users\\a0836618\\OneDrive - Aon\\Desktop"
+{
+  "selectedUser": "adm-A0836618",
+  "lastEnvironment": "DEV",
+  "updateSource": "",
+  "cyberArk": {
+    "enabled": true,
+    "baseUrl": null,
+    "loginUrl": "https://aon.cyberark.cloud/privilegecloud/Accounts",
+    "username": null,
+    "password": null,
+    "appId": null,
+    "safe": "",
+    "accountNameTemplate": "{environment}-{user}",
+    "allowManualFallback": true,
+    "authType": "Password",
+    "interactiveLogin": true,
+    "safeByEnvironment": {
+      "DEV": "LATAM_TR_PPA_A0836618",
+      "QC": "LATAM_EXTQC_PPA_A0836618",
+      "PROD": "LATAM_UNTR_PPA_A0836618"
+    }
+  }
 }

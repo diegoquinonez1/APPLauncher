@@ -1,4 +1,11 @@
-﻿$script:ExpiredLauncherCredentialStatuses = @()
+﻿if(-not (Get-Command Test-CyberArkIntegrationEnabled -ErrorAction SilentlyContinue)){
+    $cyberArkProviderPath = Join-Path $PSScriptRoot "CyberArkProvider.ps1"
+    if(Test-Path $cyberArkProviderPath){
+        . $cyberArkProviderPath
+    }
+}
+
+$script:ExpiredLauncherCredentialStatuses = @()
 
 function Get-Credentials {
 
@@ -63,6 +70,7 @@ function Get-LauncherCredentialStatus {
         [string]$User
     )
 
+    $settings = Get-CyberArkSettings
     $store = Get-Credentials
     $credential =
         $store.credentials |
@@ -74,48 +82,84 @@ function Get-LauncherCredentialStatus {
         } |
         Select-Object -First 1
 
-    if(!$credential){
+    if(Test-CyberArkIntegrationEnabled){
+        $hasServiceCredentials = -not [string]::IsNullOrWhiteSpace([string]$settings.username) -or
+            -not [string]::IsNullOrWhiteSpace([string]$settings.password) -or
+            -not [string]::IsNullOrWhiteSpace([string]$settings.appId)
 
-        $expiredStatus =
-            $script:ExpiredLauncherCredentialStatuses |
-            Where-Object {
-
-                $_.Environment -eq $Environment -and
-                $_.User -eq $User
-
-            } |
-            Select-Object -First 1
-
-        if($expiredStatus){
-
-            return [PSCustomObject]@{
-                Environment = $Environment
-                User = $User
-                Status = "Expirada"
-                ExpiresAt = $expiredStatus.ExpiresAt
-                Remaining = [timespan]::Zero
+        try{
+            $vaultPassword = Get-CyberArkCredentialValue -Environment $Environment -User $User
+            if(-not [string]::IsNullOrWhiteSpace([string]$vaultPassword)){
+                Save-LauncherCredential -Environment $Environment -User $User -Password $vaultPassword
+                return [PSCustomObject]@{
+                    Environment = $Environment
+                    User = $User
+                    Status = "Válida"
+                    ExpiresAt = (Get-Date).AddHours(8)
+                    Remaining = [timespan]::FromHours(8)
+                }
             }
-
         }
+        catch{
+        }
+    }
+
+    if($credential){
+        $expiryInfo = Get-CredentialExpiryInfo $credential
 
         return [PSCustomObject]@{
             Environment = $Environment
             User = $User
-            Status = "No configurada"
-            ExpiresAt = $null
+            Status = $expiryInfo.Status
+            ExpiresAt = $expiryInfo.ExpiresAt
+            Remaining = $expiryInfo.Remaining
+        }
+    }
+
+    if(Test-CyberArkIntegrationEnabled){
+        $hasServiceCredentials = -not [string]::IsNullOrWhiteSpace([string]$settings.username) -or
+            -not [string]::IsNullOrWhiteSpace([string]$settings.password) -or
+            -not [string]::IsNullOrWhiteSpace([string]$settings.appId)
+
+        if(-not $hasServiceCredentials -and $settings.PSObject.Properties.Name -contains "interactiveLogin" -and [bool]$settings.interactiveLogin){
+            return [PSCustomObject]@{
+                Environment = $Environment
+                User = $User
+                Status = "Login interactivo requerido: CyberArk/Okta abrió sesión, pero no se obtuvo contraseña"
+                ExpiresAt = $null
+                Remaining = [timespan]::Zero
+            }
+        }
+    }
+
+    $expiredStatus =
+        $script:ExpiredLauncherCredentialStatuses |
+        Where-Object {
+
+            $_.Environment -eq $Environment -and
+            $_.User -eq $User
+
+        } |
+        Select-Object -First 1
+
+    if($expiredStatus){
+
+        return [PSCustomObject]@{
+            Environment = $Environment
+            User = $User
+            Status = "Expirada"
+            ExpiresAt = $expiredStatus.ExpiresAt
             Remaining = [timespan]::Zero
         }
 
     }
 
-    $expiryInfo = Get-CredentialExpiryInfo $credential
-
     return [PSCustomObject]@{
         Environment = $Environment
         User = $User
-        Status = $expiryInfo.Status
-        ExpiresAt = $expiryInfo.ExpiresAt
-        Remaining = $expiryInfo.Remaining
+        Status = "No configurada"
+        ExpiresAt = $null
+        Remaining = [timespan]::Zero
     }
 
 }
@@ -334,6 +378,18 @@ function Test-LauncherCredential {
         [string]$User
     )
 
+    if(Test-CyberArkIntegrationEnabled){
+        try{
+            $vaultPassword = Get-CyberArkCredentialValue -Environment $Environment -User $User
+            if(-not [string]::IsNullOrWhiteSpace([string]$vaultPassword)){
+                Save-LauncherCredential -Environment $Environment -User $User -Password $vaultPassword
+                return $true
+            }
+        }
+        catch{
+        }
+    }
+
     $status = Get-LauncherCredentialStatus $Environment $User
 
     if($status.Status -eq "Expirada"){
@@ -341,6 +397,10 @@ function Test-LauncherCredential {
         Remove-ExpiredLauncherCredentials | Out-Null
         return $false
 
+    }
+
+    if($status.Status -match "login interactivo|CyberArk|manual"){
+        return $false
     }
 
     return $status.Status -ne "No configurada"
@@ -353,6 +413,22 @@ function Get-LauncherCredential {
         [string]$Environment,
         [string]$User
     )
+
+    if(Test-CyberArkIntegrationEnabled){
+        try{
+            $vaultPassword = Get-CyberArkCredentialValue -Environment $Environment -User $User
+            if(-not [string]::IsNullOrWhiteSpace([string]$vaultPassword)){
+                Save-LauncherCredential -Environment $Environment -User $User -Password $vaultPassword
+                return [PSCustomObject]@{
+                    Environment = $Environment
+                    User = $User
+                    Password = $vaultPassword
+                }
+            }
+        }
+        catch{
+        }
+    }
 
     $status = Get-LauncherCredentialStatus $Environment $User
 
@@ -367,6 +443,10 @@ function Get-LauncherCredential {
 
         return $null
 
+    }
+
+    if($status.Status -match "login interactivo|CyberArk|manual"){
+        return $null
     }
 
     $store = Get-Credentials
@@ -432,6 +512,10 @@ function Copy-LauncherCredentialToClipboard {
             Remove-ExpiredLauncherCredentials | Out-Null
             throw "La credencial para el usuario y entorno seleccionados expiró y fue eliminada."
 
+        }
+
+        if($status.Status -match "login interactivo|CyberArk|manual"){
+            throw "CyberArk/Okta requiere login interactivo y aún no se recuperó una contraseña válida."
         }
 
         throw "No existe una credencial configurada para el usuario y entorno seleccionados."

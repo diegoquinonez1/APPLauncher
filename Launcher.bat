@@ -2,6 +2,10 @@
 setlocal EnableDelayedExpansion
 title APPLauncher v2.0
 
+for /f "skip=1 tokens=2" %%P in ('wmic process where "name='pwsh.exe' or name='powershell.exe'" get commandline 2^>nul ^| findstr /i /c:"Launcher.ps1" ^| findstr /v /i /c:"findstr"') do (
+    taskkill /PID %%P /F >nul 2>&1
+)
+
 :: Directorios
 set "ROOT=%~dp0"
 set "CONFIG=%ROOT%Config"

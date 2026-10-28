@@ -38,8 +38,19 @@ function Initialize-LauncherConfiguration {
             selectedUser   = "adm-A0836618"
             lastEnvironment = "DEV"
             updateSource = ""
+            cyberArk = @{
+                enabled = $false
+                baseUrl = ""
+                username = ""
+                password = ""
+                appId = ""
+                safe = ""
+                accountNameTemplate = "{environment}-{user}"
+                allowManualFallback = $true
+                authType = "Password"
+            }
         } |
-        ConvertTo-Json |
+        ConvertTo-Json -Depth 20 |
         Set-Content `
             $settingsFile `
             -Encoding UTF8
@@ -185,6 +196,74 @@ function Initialize-LauncherConfiguration {
 
 }
 
+function Ensure-LauncherSettingsShape {
+
+    param(
+        [Parameter(Mandatory = $true)]
+        [object]$Settings
+    )
+
+    if($null -eq $Settings){
+        $Settings = [pscustomobject]@{}
+    }
+
+    $defaultValues = @{
+        selectedUser = "adm-A0836618"
+        lastEnvironment = "DEV"
+        updateSource = ""
+    }
+
+    foreach($property in $defaultValues.Keys){
+        if($null -eq $Settings.PSObject.Properties[$property]){
+            $Settings | Add-Member -Force -NotePropertyName $property -NotePropertyValue $defaultValues[$property]
+        }
+    }
+
+    if($null -eq $Settings.PSObject.Properties["cyberArk"]){
+        $Settings | Add-Member -Force -NotePropertyName "cyberArk" -NotePropertyValue ([pscustomobject]@{
+            enabled = $false
+            baseUrl = ""
+            loginUrl = "https://aon.cyberark.cloud/privilegecloud/Accounts"
+            username = ""
+            password = ""
+            appId = ""
+            safe = ""
+            accountNameTemplate = "{environment}-{user}"
+            allowManualFallback = $true
+            authType = "Password"
+            interactiveLogin = $true
+        })
+    }
+
+    $cyberArk = $Settings.cyberArk
+    if($null -eq $cyberArk){
+        $cyberArk = [pscustomobject]@{}
+        $Settings.cyberArk = $cyberArk
+    }
+
+    $cyberArkDefaults = @{
+        enabled = $false
+        baseUrl = ""
+        loginUrl = "https://aon.cyberark.cloud/privilegecloud/Accounts"
+        username = ""
+        password = ""
+        appId = ""
+        safe = ""
+        accountNameTemplate = "{environment}-{user}"
+        allowManualFallback = $true
+        authType = "Password"
+        interactiveLogin = $true
+    }
+
+    foreach($property in $cyberArkDefaults.Keys){
+        if($null -eq $cyberArk.PSObject.Properties[$property]){
+            $cyberArk | Add-Member -Force -NotePropertyName $property -NotePropertyValue $cyberArkDefaults[$property]
+        }
+    }
+
+    return $Settings
+}
+
 function Get-JsonFile {
 
     param(
@@ -202,12 +281,18 @@ function Get-JsonFile {
 
     }
 
-    return (
-        Get-Content `
-            $file `
-            -Raw |
-        ConvertFrom-Json
-    )
+    $data = Get-Content `
+        $file `
+        -Raw |
+    ConvertFrom-Json
+
+    if($FileName -eq "settings.json"){
+        $normalized = Ensure-LauncherSettingsShape -Settings $data
+        $normalized | ConvertTo-Json -Depth 20 | Set-Content $file -Encoding UTF8
+        return $normalized
+    }
+
+    return $data
 
 }
 
