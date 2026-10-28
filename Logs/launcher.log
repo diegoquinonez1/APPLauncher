@@ -12,3 +12,18 @@
 2026-10-26 23:06:19 | INFO | PROD | extad\  | VSCode
 2026-10-26 23:06:28 | INFO | PROD | extad\adm-A0836618 | VisualStudio
 2026-10-26 23:19:03 | INFO | DEV | devaonnet\adm-A0836618 | VisualStudio
+2026-10-27 09:44:32 | INFO | PROD | extad\adm-A0836618 | VSCode
+2026-10-27 09:59:10 | INFO | QC | extadqc\adm-A0836618 | VSCode
+2026-10-27 12:31:42 | INFO | QC | extadqc\adm-A0836618 | SSMS
+2026-10-27 12:38:24 | INFO | DEV | devaonnet\adm-A0836618 | SSMS
+2026-10-27 14:01:20 | INFO | QC | extadqc\adm-A0836618 | VisualStudio
+2026-10-28 11:18:43 | INFO | QC | extadqc\adm-A0836618 | VisualStudio
+2026-10-28 12:03:57 | INFO | DEV | devaonnet\adm-A0836618 | SSMS
+2026-10-28 12:40:43 | INFO | DEV | devaonnet\adm-A0836618 | SSMS
+2026-10-28 12:41:03 | INFO | QC | extadqc\adm-A0836618 | SSMS
+2026-10-28 15:41:06 | ERROR | No existe una credencial configurada para el usuario y entorno seleccionados.
+2026-10-28 16:05:26 | ERROR | No existe una credencial configurada para el usuario y entorno seleccionados.
+2026-10-28 16:11:29 | ERROR | Configuración de excepción "selectedUser": "No se encuentra la propiedad "selectedUser" en este objeto. Compruebe que la propiedad existe y se puede establecer."
+2026-10-28 16:20:28 | ERROR | CyberArk/Okta requiere login interactivo y aún no se recuperó una contraseña válida.
+2026-10-28 16:20:34 | ERROR | CyberArk/Okta requiere login interactivo y aún no se recuperó una contraseña válida.
+2026-10-28 16:21:09 | ERROR | CyberArk/Okta requiere login interactivo y aún no se recuperó una contraseña válida.
