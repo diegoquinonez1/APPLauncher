@@ -35,4 +35,11 @@ jobs:
             throw 'No existe la carpeta Tests en la raíz del repositorio.'
           }
 
+          # Ensures the repo uses the exact compatible Pester version instead of any newer one preinstalled by the runner.
+          $requiredPesterVersion = [version]'3.4.0'
+          $installed = Get-Module -ListAvailable Pester | Where-Object { $_.Version -eq $requiredPesterVersion }
+          if (-not $installed) {
+            throw "Pester $requiredPesterVersion no quedó instalado en el runner."
+          }
+
           & .\Tests\Run-Tests.ps1

@@ -3,12 +3,14 @@ param(
     [string[]]$Path = @((Join-Path $PSScriptRoot "*.Tests.ps1"))
 )
 
+$requiredPesterVersion = [version]'3.4.0'
 $pester = Get-Module -ListAvailable Pester |
+    Where-Object { $_.Version -eq $requiredPesterVersion } |
     Sort-Object Version -Descending |
     Select-Object -First 1
 
 if($null -eq $pester){
-    throw "Pester no está instalado. Instálelo con: Install-Module Pester -Scope CurrentUser"
+    throw "Pester $requiredPesterVersion no está instalado. Instálelo con: Install-Module Pester -RequiredVersion 3.4.0 -Scope CurrentUser"
 }
 
 $scriptFiles = @()
@@ -21,7 +23,7 @@ if($scriptFiles.Count -eq 0){
     throw "No se encontraron archivos *.Tests.ps1 para ejecutar."
 }
 
-Import-Module Pester -RequiredVersion $pester.Version -Force
+Import-Module Pester -RequiredVersion $requiredPesterVersion -Force
 try{
     $result = Invoke-Pester -Path $scriptFiles.FullName -PassThru
 }
