@@ -348,14 +348,14 @@ function Export-LauncherProfile {
                 throw "Hay una credencial incompleta que no se puede exportar."
             }
 
-            $plainPassword = Unprotect-Password $credential.password
+            $plainSecret = Unprotect-Secret $credential.password
             $portableCredentials += [PSCustomObject]@{
                 environment = $credential.environment
                 user = $credential.user
-                password = $plainPassword
+                password = $plainSecret
                 updatedAt = $credential.updatedAt
             }
-            $plainPassword = $null
+            $plainSecret = $null
         }
 
         $portableJson = ConvertTo-Json -InputObject ([PSCustomObject]@{
@@ -566,7 +566,7 @@ function Import-LauncherProfile {
             $localCredentials += [PSCustomObject]@{
                 environment = [string]$credential.environment
                 user = [string]$credential.user
-                password = Protect-Password ([string]$credential.password)
+                password = Protect-Secret ([string]$credential.password)
                 updatedAt = [string]$credential.updatedAt
             }
         }

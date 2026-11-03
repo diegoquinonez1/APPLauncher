@@ -9,11 +9,11 @@ Describe "Sprint 6: exportación e importación de perfil" {
         . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\UserManager.ps1")
         . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\CredentialManager.ps1")
         . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\ProfileTransfer.ps1")
-        $script:passphrase = ConvertTo-SecureString "portable-profile-passphrase" -AsPlainText -Force
+        $script:passphrase = ConvertTo-SecureString "portable-profile-demo" -AsPlainText -Force
         Save-LauncherCredential `
             -Environment "DEV" `
             -User "test-user" `
-            -Password "ProfileTransfer-Test-Secret"
+            -SecretValue "profile-demo-value"
     }
 
     AfterEach {
@@ -43,7 +43,7 @@ Describe "Sprint 6: exportación e importación de perfil" {
                     $stream.Dispose()
                 }
             }
-            $archiveText.Contains("ProfileTransfer-Test-Secret") | Should Be $false
+            $archiveText.Contains("profile-demo-value") | Should Be $false
         }
         finally{
             $archive.Dispose()
@@ -80,8 +80,8 @@ Describe "Sprint 6: exportación e importación de perfil" {
         $result.ImportedFiles | Should Be 7
         (Get-Users).users[0] | Should Be "test-user"
         $localCredential = (Get-Credentials).credentials[0]
-        $localCredential.password.Contains("ProfileTransfer-Test-Secret") | Should Be $false
-        (Get-LauncherCredential "DEV" "test-user").Password | Should Be "ProfileTransfer-Test-Secret"
+        $localCredential.password.Contains("profile-demo-value") | Should Be $false
+        (Get-LauncherCredential "DEV" "test-user").Password | Should Be "profile-demo-value"
         (Get-ChildItem -LiteralPath $Global:BackupFolder -Directory).Count | Should Be 1
     }
 

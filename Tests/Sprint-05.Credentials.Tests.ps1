@@ -32,8 +32,8 @@ Describe "Sprint 5: expiración y protección de credenciales" {
     }
 
     It "Guarda la contraseña con DPAPI y la recupera solo para el usuario actual" {
-        $password = "Test-only-secret-123!"
-        Save-LauncherCredential -Environment "DEV" -User "test-user" -Password $password
+        $password = "example-value-123!"
+        Save-LauncherCredential -Environment "DEV" -User "test-user" -SecretValue $password
 
         $stored = (Get-Credentials).credentials[0]
         $stored.password.Contains($password) | Should Be $false
@@ -51,13 +51,13 @@ Describe "Sprint 5: expiración y protección de credenciales" {
         $expired = [PSCustomObject]@{
             environment = "DEV"
             user = "test-user"
-            password = Protect-Password "expired-test-secret"
+            password = Protect-Secret "sample-expired-demo"
             updatedAt = $script:now.AddHours(-9).ToString("s")
         }
         $valid = [PSCustomObject]@{
             environment = "QC"
             user = "test-user"
-            password = Protect-Password "valid-test-secret"
+            password = Protect-Secret "sample-valid-demo"
             updatedAt = (Get-Date).AddHours(-1).ToString("s")
         }
         Save-Credentials ([PSCustomObject]@{credentials=@($expired, $valid)})
@@ -74,7 +74,7 @@ Describe "Sprint 5: expiración y protección de credenciales" {
         $expired = [PSCustomObject]@{
             environment = "PROD"
             user = "test-user"
-            password = Protect-Password "expired-test-secret"
+            password = Protect-Secret "sample-expired-demo"
             updatedAt = $script:now.AddHours(-10).ToString("s")
         }
         Save-Credentials ([PSCustomObject]@{credentials=@($expired)})
@@ -194,14 +194,14 @@ Describe "Sprint 5: expiración y protección de credenciales" {
         $manual = [PSCustomObject]@{
             environment = "DEV"
             user = "adm-A0836618"
-            password = Protect-Password "manual-secret-123"
+            password = Protect-Secret "demo-manual-123"
             updatedAt = (Get-Date).AddHours(-1).ToString("s")
         }
         Save-Credentials ([PSCustomObject]@{credentials=@($manual)})
 
         $status = Get-LauncherCredentialStatus "DEV" "adm-A0836618"
         $status.Status | Should Be "Válida"
-        (Get-LauncherCredential "DEV" "adm-A0836618").Password | Should Be "manual-secret-123"
+        (Get-LauncherCredential "DEV" "adm-A0836618").Password | Should Be "demo-manual-123"
         (Test-LauncherCredential "DEV" "adm-A0836618") | Should Be $true
     }
 
@@ -273,13 +273,13 @@ Describe "Sprint 5: expiración y protección de credenciales" {
         $manual = [PSCustomObject]@{
             environment = "DEV"
             user = "test-user"
-            password = Protect-Password "manual-fallback-secret"
+            password = Protect-Secret "demo-fallback-456"
             updatedAt = (Get-Date).AddHours(-2).ToString("s")
         }
         Save-Credentials ([PSCustomObject]@{credentials=@($manual)})
 
         $resolved = Get-LauncherCredential "DEV" "test-user"
-        $resolved.Password | Should Be "manual-fallback-secret"
+        $resolved.Password | Should Be "demo-fallback-456"
 
         Remove-Item Function:\Get-CyberArkCredentialValue -Force -ErrorAction SilentlyContinue
     }

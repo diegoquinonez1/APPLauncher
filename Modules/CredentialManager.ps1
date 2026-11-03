@@ -90,7 +90,7 @@ function Get-LauncherCredentialStatus {
         try{
             $vaultPassword = Get-CyberArkCredentialValue -Environment $Environment -User $User
             if(-not [string]::IsNullOrWhiteSpace([string]$vaultPassword)){
-                Save-LauncherCredential -Environment $Environment -User $User -Password $vaultPassword
+                Save-LauncherCredential -Environment $Environment -User $User -SecretValue $vaultPassword
                 return [PSCustomObject]@{
                     Environment = $Environment
                     User = $User
@@ -224,15 +224,15 @@ function Save-Credentials {
 
 }
 
-function Protect-Password {
+function Protect-Secret {
 
     param(
-        [string]$Password
+        [string]$SecretText
     )
 
     $secure =
         ConvertTo-SecureString `
-            $Password `
+            $SecretText `
             -AsPlainText `
             -Force
 
@@ -241,15 +241,15 @@ function Protect-Password {
 
 }
 
-function Unprotect-Password {
+function Unprotect-Secret {
 
     param(
-        [string]$EncryptedPassword
+        [string]$EncryptedSecret
     )
 
     $secure =
         ConvertTo-SecureString `
-            $EncryptedPassword
+            $EncryptedSecret
 
     $ptr =
         [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR(
@@ -278,7 +278,7 @@ function Save-LauncherCredential {
     param(
         [string]$Environment,
         [string]$User,
-        [string]$Password
+        [string]$SecretValue
     )
 
     Remove-ExpiredLauncherCredentials | Out-Null
@@ -305,7 +305,7 @@ function Save-LauncherCredential {
     if($existing){
 
         $existing.password =
-            Protect-Password $Password
+            Protect-Secret $SecretValue
 
         $existing.updatedAt =
             (Get-Date).ToString("s")
@@ -323,7 +323,7 @@ function Save-LauncherCredential {
                     $User
 
                 password =
-                    (Protect-Password $Password)
+                    (Protect-Secret $SecretValue)
 
                 updatedAt =
                     (Get-Date).ToString("s")
@@ -382,7 +382,7 @@ function Test-LauncherCredential {
         try{
             $vaultPassword = Get-CyberArkCredentialValue -Environment $Environment -User $User
             if(-not [string]::IsNullOrWhiteSpace([string]$vaultPassword)){
-                Save-LauncherCredential -Environment $Environment -User $User -Password $vaultPassword
+                Save-LauncherCredential -Environment $Environment -User $User -SecretValue $vaultPassword
                 return $true
             }
         }
@@ -418,7 +418,7 @@ function Get-LauncherCredential {
         try{
             $vaultPassword = Get-CyberArkCredentialValue -Environment $Environment -User $User
             if(-not [string]::IsNullOrWhiteSpace([string]$vaultPassword)){
-                Save-LauncherCredential -Environment $Environment -User $User -Password $vaultPassword
+                Save-LauncherCredential -Environment $Environment -User $User -SecretValue $vaultPassword
                 return [PSCustomObject]@{
                     Environment = $Environment
                     User = $User
@@ -476,7 +476,7 @@ function Get-LauncherCredential {
             $User
 
         Password =
-            (Unprotect-Password $cred.password)
+            (Unprotect-Secret $cred.password)
 
     }
 

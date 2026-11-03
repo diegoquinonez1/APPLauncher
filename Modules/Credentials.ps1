@@ -16,7 +16,7 @@ function Add-Credential {
     param(
         $Environment,
         $User,
-        $Password
+        [string]$SecretValue
     )
 
     $domain = Get-DomainByEnvironment $Environment
@@ -26,7 +26,7 @@ function Add-Credential {
     cmdkey `
       /add:$target `
       /user:$domain\$User `
-      /pass:$Password
+      /pass:$SecretValue
 }
 
 function Remove-Credential {
