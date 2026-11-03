@@ -1,0 +1,44 @@
+name: PowerShell static analysis
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module PSScriptAnalyzer -Scope CurrentUser -Force -SkipPublisherCheck
+
+      - name: Run PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          $results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error, Warning
+
+          if ($results) {
+            $results | Format-Table -AutoSize
+            $results | ConvertTo-Json -Depth 6 | Out-File -Encoding utf8 -FilePath psanalyzer-results.json
+            throw "PSScriptAnalyzer encontró issues de calidad/seguridad. Revisa el artefacto psanalyzer-results.json."
+          }
+
+          Write-Host "PSScriptAnalyzer no encontró problemas para este repositorio."
+
+      - name: Upload PSScriptAnalyzer results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: psanalyzer-results
+          path: psanalyzer-results.json
+          if-no-files-found: ignore
