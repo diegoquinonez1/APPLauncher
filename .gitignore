@@ -1,0 +1,25 @@
+# --- Secretos y credenciales ---
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+*.crt
+*.cer
+*.jks
+*.keystore
+*.local.json
+*.secret
+*.secret.*
+
+# Configuración local o sensible
+Config/credentials.json
+Config/settings.json
+Config/users.json
+Config/*.local.json
+Config/*.secret.*
+
+# Permitir plantillas de ejemplo
+!Config/*.sample.json
+!Config/*.example.json

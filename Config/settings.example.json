@@ -1,11 +1,11 @@
 {
-  "selectedUser": "adm-A0836618",
+  "selectedUser": "demo-user",
   "lastEnvironment": "DEV",
   "updateSource": "",
   "cyberArk": {
-    "enabled": true,
+    "enabled": false,
     "baseUrl": null,
-    "loginUrl": "https://aon.cyberark.cloud/privilegecloud/Accounts",
+    "loginUrl": "https://example.com/privilegecloud/Accounts",
     "username": null,
     "password": null,
     "appId": null,
@@ -15,9 +15,9 @@
     "authType": "Password",
     "interactiveLogin": true,
     "safeByEnvironment": {
-      "DEV": "LATAM_TR_PPA_A0836618",
-      "QC": "LATAM_EXTQC_PPA_A0836618",
-      "PROD": "LATAM_UNTR_PPA_A0836618"
+      "DEV": "SAFE_DEMO_DEV",
+      "QC": "SAFE_DEMO_QC",
+      "PROD": "SAFE_DEMO_PROD"
     }
   }
 }
