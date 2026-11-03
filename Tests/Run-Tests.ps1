@@ -23,7 +23,7 @@ if($scriptFiles.Count -eq 0){
 
 Import-Module Pester -RequiredVersion $pester.Version -Force
 try{
-    $result = Invoke-Pester -Script $scriptFiles.FullName -PassThru
+    $result = Invoke-Pester -Path $scriptFiles.FullName -PassThru
 }
 finally{
     Remove-Item -Path Function:\global:Get-APPLauncherFormControls -ErrorAction SilentlyContinue
