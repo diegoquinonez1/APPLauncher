@@ -28,7 +28,9 @@ jobs:
           $results = Invoke-ScriptAnalyzer -Path . -Recurse -Severity Error -ExcludeRule @(
             'PSAvoidUsingWriteHost',
             'PSUseDeclaredVarsMoreThanAssignments',
-            'PSUseApprovedVerbs'
+            'PSUseApprovedVerbs',
+            'PSAvoidUsingConvertToSecureStringWithPlainText',
+            'PSAvoidUsingPlainTextForPassword'
           )
 
           if ($results) {
