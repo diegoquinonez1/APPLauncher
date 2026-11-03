@@ -84,25 +84,26 @@ La política del sistema es la siguiente:
 
 ```mermaid
 flowchart LR
-    U[Usuario] --> UI[Launcher.ps1]
-    UI --> CM[CredentialManager.ps1]
-    UI --> CA[CyberArkProvider.ps1]
-    UI --> CFG[ConfigManager.ps1]
+    U[Usuario] --> UI["Launcher.ps1"]
+    UI --> CFG["ConfigManager.ps1"]
+    UI --> CA["CyberArkProvider.ps1"]
+    UI --> CM["CredentialManager.ps1"]
+    UI --> CF["CredentialForm.ps1"]
 
-    CFG --> SETTINGS[settings.json]
-    CM --> CRED[credentials.json]
-    CM --> DPAPI[DPAPI / Windows SecureString]
+    CFG --> SETTINGS["settings.json"]
+    CA -->|"Lee integración, usuario y safe"| SETTINGS
+    CM --> CRED["credentials.json"]
+    CM --> DPAPI["DPAPI (SecureString)"]
+    CF -->|"Guardar / comprobar / copiar"| CM
 
-    CA --> CYB[CyberArk / Okta]
-    CA --> LOGIN[Login interactivo]
-    CA --> API[API / Password Vault (si existe)]
+    CA -->|"Credenciales de servicio configuradas"| API["API CyberArk Privilege Cloud"]
+    CA -->|"Sin credenciales de servicio y interactiveLogin"| BROWSER["Navegador: login CyberArk + MFA Okta"]
+    CA -.->|"Sin integración o sin secreto válido"| CM
 
-    CM --> LOCAL[Credencial manual guardada]
-    CA --> VAULT[Vault / Safe / Secret]
-
-    LOCAL --> USE[Uso para iniciar sesión o copiar contraseña]
-    VAULT --> USE
-    LOGIN --> USE
+    API --> VAULT["Safe / Cuenta / Secreto"]
+    VAULT --> USE["Iniciar sesión o copiar contraseña"]
+    BROWSER --> CM
+    CM -->|"Credencial manual vigente"| USE
 ```
 
 ---
