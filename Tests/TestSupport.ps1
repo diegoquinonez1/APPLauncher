@@ -1,5 +1,19 @@
 ﻿$script:APPLauncherTestRepositoryRoot = Split-Path -Parent $PSScriptRoot
 
+if(-not (Get-Command -Name Get-LauncherEnvironmentDefinitions -ErrorAction SilentlyContinue)){
+    . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\ConfigManager.ps1")
+}
+
+if(-not (Get-Command -Name Get-LauncherEnvironments -ErrorAction SilentlyContinue)){
+    function global:Get-LauncherEnvironments {
+        return Get-LauncherEnvironmentDefinitions
+    }
+}
+
+if(-not (Get-Command -Name Get-DomainByEnvironment -ErrorAction SilentlyContinue)){
+    . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\AppLauncher.ps1")
+}
+
 if(-not ("APPLauncherTestControlWalker" -as [type])){
     Add-Type -TypeDefinition @"
 using System.Collections;
@@ -113,7 +127,7 @@ function Ensure-TestSettingsShape {
     }
 
     foreach($property in @(
-        @{ Name = "selectedUser"; Value = "adm-A0836618" },
+        @{ Name = "selectedUser"; Value = "demo-user" },
         @{ Name = "lastEnvironment"; Value = "DEV" },
         @{ Name = "updateSource"; Value = "" }
     )){
@@ -126,7 +140,7 @@ function Ensure-TestSettingsShape {
         $Settings | Add-Member -Force -NotePropertyName "cyberArk" -NotePropertyValue ([pscustomobject]@{
             enabled = $false
             baseUrl = $null
-            loginUrl = "https://aon.cyberark.cloud/privilegecloud/Accounts"
+            loginUrl = "https://example.cyberark.example/privilegecloud/Accounts"
             username = $null
             password = $null
             appId = $null

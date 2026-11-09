@@ -1,4 +1,9 @@
-﻿function Show-FavoriteForm {
+﻿if(-not (Get-Command -Name Get-LauncherEnvironmentNames -ErrorAction SilentlyContinue)){
+    $moduleRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+    . (Join-Path $moduleRoot "ConfigManager.ps1")
+}
+
+function Show-FavoriteForm {
 
     $formFav = New-Object System.Windows.Forms.Form
 
@@ -71,7 +76,7 @@
     $cmbEnv.Location = New-Object Drawing.Point(360,185)
     $cmbEnv.Width = 250
 
-    @("DEV","QC","PROD") |
+    Get-LauncherEnvironmentNames |
     ForEach-Object {
 
         [void]$cmbEnv.Items.Add($_)

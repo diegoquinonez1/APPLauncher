@@ -1,3 +1,8 @@
+if(-not (Get-Command -Name Get-LauncherEnvironmentDefinitions -ErrorAction SilentlyContinue)){
+    $moduleRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+    . (Join-Path $moduleRoot "ConfigManager.ps1")
+}
+
 function Get-CyberArkSettings {
 
     $settings = $null
@@ -7,6 +12,17 @@ function Get-CyberArkSettings {
     }
     catch{
         $settings = $null
+    }
+
+    $defaultSafeMap = [PSCustomObject]@{}
+    foreach($environment in Get-LauncherEnvironmentDefinitions){
+        if(-not [string]::IsNullOrWhiteSpace([string]$environment.name)){
+            $defaultSafeMap | Add-Member -Force -NotePropertyName $environment.name -NotePropertyValue ([string]$environment.safe)
+        }
+    }
+
+    if($defaultSafeMap.PSObject.Properties.Count -eq 0){
+        $defaultSafeMap = [PSCustomObject]@{}
     }
 
     $default = [PSCustomObject]@{
@@ -21,11 +37,7 @@ function Get-CyberArkSettings {
         allowManualFallback = $true
         authType = "Password"
         interactiveLogin = $true
-        safeByEnvironment = [PSCustomObject]@{
-            DEV = "LATAM_TR_PPA_A0836618"
-            QC = "LATAM_EXTQC_PPA_A0836618"
-            PROD = "LATAM_UNTR_PPA_A0836618"
-        }
+        safeByEnvironment = $defaultSafeMap
     }
 
     if($null -eq $settings){
@@ -322,7 +334,11 @@ function Get-CyberArkCredentialValue {
     }
 
     $safeName = $settings.safe
-    if($settings.PSObject.Properties.Name -contains "safeByEnvironment"){
+    $environmentSafe = Get-LauncherEnvironmentSafe -Environment $Environment
+    if(-not [string]::IsNullOrWhiteSpace([string]$environmentSafe)){
+        $safeName = $environmentSafe
+    }
+    elseif($settings.PSObject.Properties.Name -contains "safeByEnvironment"){
         if($settings.safeByEnvironment -and $settings.safeByEnvironment.PSObject.Properties.Name -contains $Environment){
             $safeName = $settings.safeByEnvironment.$Environment
         }

@@ -1,4 +1,9 @@
-﻿function Show-ProjectsForm {
+﻿if(-not (Get-Command -Name Get-LauncherEnvironmentNames -ErrorAction SilentlyContinue)){
+    $moduleRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+    . (Join-Path $moduleRoot "ConfigManager.ps1")
+}
+
+function Show-ProjectsForm {
 
     $formProjects = New-Object System.Windows.Forms.Form
     $formProjects.Text = "Administración de Proyectos"
@@ -52,7 +57,7 @@
     $cmbEnv = New-Object System.Windows.Forms.ComboBox
     $cmbEnv.Location = New-Object Drawing.Point(640,45)
     $cmbEnv.Width = 200
-    @("DEV","QC","PROD") |
+    Get-LauncherEnvironmentNames |
     ForEach-Object {
         [void]$cmbEnv.Items.Add($_)
     }

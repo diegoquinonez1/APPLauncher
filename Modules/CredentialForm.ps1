@@ -137,17 +137,18 @@ function Show-CredentialForm {
     $cmbEnv.Location = New-Object Drawing.Point(20,120)
     $cmbEnv.Width = 250
 
-    @(
-        "DEV",
-        "QC",
-        "PROD"
-    ) | ForEach-Object {
-
-        [void]$cmbEnv.Items.Add($_)
-
+    $environmentNames = @(Get-LauncherEnvironmentNames)
+    if($environmentNames.Count -eq 0){
+        $environmentNames = @("Sin configuración")
     }
 
-    $cmbEnv.SelectedIndex = 0
+    foreach($environmentName in $environmentNames){
+        [void]$cmbEnv.Items.Add($environmentName)
+    }
+
+    if($cmbEnv.Items.Count -gt 0){
+        $cmbEnv.SelectedIndex = 0
+    }
 
     $formCred.Controls.Add($cmbEnv)
 

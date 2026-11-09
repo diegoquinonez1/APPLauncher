@@ -34,7 +34,7 @@ El archivo `Launcher.ps1` determina la raíz de instalación, carga los módulos
 La integración actual está diseñada para ser segura y honesta con el usuario:
 
 - Si hay credenciales reales de servicio de CyberArk configuradas, el launcher intenta reutilizarlas como fuente principal.
-- Si no existen esas credenciales ni una autenticación programática habilitada, la aplicación abre la URL interactiva de CyberArk/Okta (`https://aon.cyberark.cloud/privilegecloud/Accounts`) para que el usuario complete el login con correo, contraseña y MFA/push del celular.
+- Si no existen esas credenciales ni una autenticación programática habilitada, la aplicación abre la URL interactiva de CyberArk/Okta (`https://example.cyberark.example/privilegecloud/Accounts`) para que el usuario complete el login con correo, contraseña y MFA/push del celular.
 - La contraseña no se considera recuperada si el navegador solo inició la sesión interactiva y el sistema no devolvió un secreto válido.
 - El flujo manual sigue funcionando como respaldo para este alcance.
 - La lógica evita falsos positivos y evita guardar el HTML de la página de login como si fuera una contraseña.

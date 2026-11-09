@@ -107,6 +107,20 @@ else {
 # ==================================
 
 $settings = Get-JsonFile "settings.json"
+$environmentCheck = Test-LauncherEnvironmentConfiguration
+
+if(-not $environmentCheck.IsValid){
+    [System.Windows.Forms.MessageBox]::Show(
+        $environmentCheck.Error + " Abrir el archivo de configuración para definir al menos un ambiente.",
+        "Configuración del cliente pendiente",
+        [System.Windows.Forms.MessageBoxButtons]::OK,
+        [System.Windows.Forms.MessageBoxIcon]::Warning
+    ) | Out-Null
+
+    Open-LauncherEnvironmentConfiguration | Out-Null
+    return
+}
+
 Remove-ExpiredLauncherCredentials | Out-Null
 
 Scan-Applications | Out-Null
@@ -204,20 +218,23 @@ $grpEnv.Size = New-Object Drawing.Size(280,140)
 
 $form.Controls.Add($grpEnv)
 
-$rbDev = New-Object System.Windows.Forms.RadioButton
-$rbDev.Text = "DEV"
-$rbDev.AutoSize = $true
-$rbDev.Margin = New-Object System.Windows.Forms.Padding(3,7,8,3)
+$environmentLabels = @(Get-LauncherEnvironmentNames)
+$environmentRadioButtons = @()
+foreach($label in $environmentLabels){
+    $radio = New-Object System.Windows.Forms.RadioButton
+    $radio.Text = $label
+    $radio.AutoSize = $true
+    $radio.Margin = New-Object System.Windows.Forms.Padding(3,7,8,3)
+    $environmentRadioButtons += $radio
+}
 
-$rbQc = New-Object System.Windows.Forms.RadioButton
-$rbQc.Text = "QC"
-$rbQc.AutoSize = $true
-$rbQc.Margin = New-Object System.Windows.Forms.Padding(3,7,8,3)
-
-$rbProd = New-Object System.Windows.Forms.RadioButton
-$rbProd.Text = "PROD"
-$rbProd.AutoSize = $true
-$rbProd.Margin = New-Object System.Windows.Forms.Padding(3,7,3,3)
+if($environmentRadioButtons.Count -eq 0){
+    $environmentRadioButtons = @(
+        (New-Object System.Windows.Forms.RadioButton)
+    )
+    $environmentRadioButtons[0].Text = "No configurado"
+    $environmentRadioButtons[0].Enabled = $false
+}
 
 $environmentOptions = New-Object System.Windows.Forms.FlowLayoutPanel
 $environmentOptions.Location = New-Object Drawing.Point(7,17)
@@ -225,31 +242,28 @@ $environmentOptions.Size = New-Object Drawing.Size(265,38)
 $environmentOptions.FlowDirection = [System.Windows.Forms.FlowDirection]::LeftToRight
 $environmentOptions.WrapContents = $false
 $environmentOptions.AutoScroll = $true
-$environmentOptions.Controls.AddRange(@($rbDev, $rbQc, $rbProd))
+$environmentOptions.Controls.AddRange($environmentRadioButtons)
 $grpEnv.Controls.Add($environmentOptions)
 
-switch($settings.lastEnvironment){
+foreach($radio in $environmentRadioButtons){
+    if([string]::Equals([string]$settings.lastEnvironment, [string]$radio.Text, [System.StringComparison]::OrdinalIgnoreCase)){
+        $radio.Checked = $true
+    }
+}
 
-    "DEV" { $rbDev.Checked = $true }
-
-    "QC" { $rbQc.Checked = $true }
-
-    "PROD" { $rbProd.Checked = $true }
-
-    default { $rbDev.Checked = $true }
+if($environmentRadioButtons.Count -gt 0 -and -not ($environmentRadioButtons | Where-Object { $_.Checked })){
+    $environmentRadioButtons[0].Checked = $true
 }
 
 function Get-SelectedEnvironment {
 
-    if($rbDev.Checked){
-        return "DEV"
+    foreach($radio in $environmentRadioButtons){
+        if($radio.Checked){
+            return $radio.Text
+        }
     }
 
-    if($rbQc.Checked){
-        return "QC"
-    }
-
-    return "PROD"
+    return if($environmentLabels.Count -gt 0){ $environmentLabels[0] } else { "" }
 }
 
 # ==================================
@@ -377,9 +391,19 @@ function RefreshDashboard {
     $lblDashToday.Text = "Ejecuciones de apps hoy: $($metrics.ExecutionsToday)"
     $lblDashMonth.Text = "Ejecuciones de apps este mes: $($metrics.ExecutionsThisMonth)"
 
-    $lblDashCredentialDev.Text = "Credencial DEV: " + (Get-LauncherCredentialStatus "DEV" $cmbUser.Text).Status
-    $lblDashCredentialQc.Text = "Credencial QC: " + (Get-LauncherCredentialStatus "QC" $cmbUser.Text).Status
-    $lblDashCredentialProd.Text = "Credencial PROD: " + (Get-LauncherCredentialStatus "PROD" $cmbUser.Text).Status
+    $environmentNames = @(Get-LauncherEnvironmentNames)
+    for($index = 0; $index -lt $credentialStatusLabels.Count; $index++){
+        if($index -lt $environmentNames.Count){
+            $name = $environmentNames[$index]
+            $statusValue = (Get-LauncherCredentialStatus $name $cmbUser.Text).Status
+            $credentialStatusLabels[$index].Text = "Credencial {0}: {1}" -f $name, $statusValue
+            $credentialStatusLabels[$index].Visible = $true
+        }
+        else{
+            $credentialStatusLabels[$index].Text = ""
+            $credentialStatusLabels[$index].Visible = $false
+        }
+    }
 
 }
 
@@ -396,23 +420,13 @@ function RefreshTheme {
     }
 }
 
-$rbDev.Add_CheckedChanged({
-    RefreshTheme
-    RefreshEnvironmentLabel
-    RefreshDashboard
-})
-
-$rbQc.Add_CheckedChanged({
-    RefreshTheme
-    RefreshEnvironmentLabel
-    RefreshDashboard
-})
-
-$rbProd.Add_CheckedChanged({
-    RefreshTheme
-    RefreshEnvironmentLabel
-    RefreshDashboard
-})
+foreach($radio in $environmentRadioButtons){
+    $radio.Add_CheckedChanged({
+        RefreshTheme
+        RefreshEnvironmentLabel
+        RefreshDashboard
+    })
+}
 
 RefreshTheme
 RefreshEnvironmentLabel
@@ -946,6 +960,7 @@ $btnUpdateSource.Add_Click({
 })
 $form.Controls.Add($btnUpdateSource)
 
+
 # ==================================
 # RE-SCAN
 # ==================================
@@ -1347,11 +1362,12 @@ function Update-LauncherAfterProfileImport {
         $cmbUser.SelectedIndex = -1
     }
 
-    switch([string]$settings.lastEnvironment){
-        "DEV" { $rbDev.Checked = $true }
-        "QC" { $rbQc.Checked = $true }
-        "PROD" { $rbProd.Checked = $true }
-        default { $rbDev.Checked = $true }
+    foreach($radio in $environmentRadioButtons){
+        $radio.Checked = [string]::Equals([string]$settings.lastEnvironment, [string]$radio.Text, [System.StringComparison]::OrdinalIgnoreCase)
+    }
+
+    if($environmentRadioButtons.Count -gt 0 -and -not ($environmentRadioButtons | Where-Object { $_.Checked })){
+        $environmentRadioButtons[0].Checked = $true
     }
 
     RefreshAppStatus
@@ -1648,6 +1664,15 @@ function Set-LauncherCompactLayout {
             $rowHeight
         )))
     }
+    $btnConfigEnvironmentsAdmin = New-Object System.Windows.Forms.Button
+    $btnConfigEnvironmentsAdmin.Text = "Configurar ambientes"
+    $btnConfigEnvironmentsAdmin.Size = New-Object Drawing.Size(140,40)
+    $btnConfigEnvironmentsAdmin.Add_Click({
+        Invoke-Safely {
+            Open-LauncherEnvironmentConfiguration
+        }
+    })
+
     $managementButtons = @(
         $btnCreds,
         $btnProjectsManager,
@@ -1655,7 +1680,8 @@ function Set-LauncherCompactLayout {
         $btnExportProfile,
         $btnImportProfile,
         $btnCheckUpdates,
-        $btnUpdateSource
+        $btnUpdateSource,
+        $btnConfigEnvironmentsAdmin
     )
     $btnProjectsManager.Text = "Administrar proyectos"
     foreach($button in $managementButtons){

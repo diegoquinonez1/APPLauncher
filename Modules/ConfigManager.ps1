@@ -26,6 +26,23 @@ function Initialize-LauncherConfiguration {
     }
 
     # ===============================
+    # environments.json
+    # ===============================
+
+    $environmentConfigFile =
+        Join-Path $Global:ConfigFolder "environments.json"
+
+    if(!(Test-Path $environmentConfigFile)){
+
+        @() |
+        ConvertTo-Json -Depth 20 |
+        Set-Content `
+            $environmentConfigFile `
+            -Encoding UTF8
+
+    }
+
+    # ===============================
     # settings.json
     # ===============================
 
@@ -35,8 +52,8 @@ function Initialize-LauncherConfiguration {
     if(!(Test-Path $settingsFile)){
 
         @{
-            selectedUser   = "adm-A0836618"
-            lastEnvironment = "DEV"
+            selectedUser   = "demo-user"
+            lastEnvironment = ""
             updateSource = ""
             cyberArk = @{
                 enabled = $false
@@ -67,9 +84,9 @@ function Initialize-LauncherConfiguration {
     if(!(Test-Path $usersFile)){
 
         @{
-            defaultUser = "adm-A0836618"
+            defaultUser = "demo-user"
             users = @(
-                "adm-A0836618"
+                "demo-user"
             )
         } |
         ConvertTo-Json -Depth 5 |
@@ -196,6 +213,275 @@ function Initialize-LauncherConfiguration {
 
 }
 
+function Get-LauncherEnvironments {
+    return Get-LauncherEnvironmentDefinitions
+}
+
+function Test-LauncherEnvironmentConfiguration {
+
+    $file = Join-Path $Global:ConfigFolder "environments.json"
+
+    if(!(Test-Path $file)){
+        Initialize-LauncherConfiguration
+    }
+
+    try{
+        $rawData = Get-Content -LiteralPath $file -Raw
+    }
+    catch{
+        return [PSCustomObject]@{
+            IsValid = $false
+            Error = "Aún no se ha configurado el cliente. Debe definir al menos un ambiente en el archivo de configuración."
+            Environments = @()
+        }
+    }
+
+    if([string]::IsNullOrWhiteSpace($rawData)){
+        return [PSCustomObject]@{
+            IsValid = $false
+            Error = "Aún no se ha configurado el cliente. Debe definir al menos un ambiente en el archivo de configuración."
+            Environments = @()
+        }
+    }
+
+    try{
+        $jsonData = $rawData | ConvertFrom-Json
+    }
+    catch{
+        return [PSCustomObject]@{
+            IsValid = $false
+            Error = "La configuración de ambientes es inválida o está corrupta. Revise el archivo environments.json."
+            Environments = @()
+        }
+    }
+
+    if($null -eq $jsonData){
+        return [PSCustomObject]@{
+            IsValid = $false
+            Error = "La configuración de ambientes es inválida o está vacía. Revise el archivo environments.json."
+            Environments = @()
+        }
+    }
+
+    if($jsonData -is [System.Collections.IEnumerable] -and -not ($jsonData -is [string])){
+        $items = @($jsonData)
+    }
+    elseif($jsonData.PSObject.Properties.Name -contains "environments"){
+        $items = @($jsonData.environments)
+    }
+    else{
+        $items = @($jsonData)
+    }
+
+    $normalized = @()
+    foreach($item in @($items)){
+        if($null -eq $item){
+            continue
+        }
+
+        $name = [string]$item.name
+        $domain = [string]$item.domain
+        $safe = [string]$item.safe
+
+        if([string]::IsNullOrWhiteSpace($name) -or [string]::IsNullOrWhiteSpace($domain) -or [string]::IsNullOrWhiteSpace($safe)){
+            return [PSCustomObject]@{
+                IsValid = $false
+                Error = "La configuración de ambientes tiene una estructura inválida. Cada ambiente debe incluir nombre, dominio y safe."
+                Environments = @()
+            }
+        }
+
+        $normalized += [pscustomobject]@{
+            name = $name
+            domain = $domain
+            safe = $safe
+            default = [bool]$item.default
+        }
+    }
+
+    if($normalized.Count -eq 0){
+        return [PSCustomObject]@{
+            IsValid = $false
+            Error = "Aún no se ha configurado el cliente. Debe definir al menos un ambiente en el archivo de configuración."
+            Environments = @()
+        }
+    }
+
+    return [PSCustomObject]@{
+        IsValid = $true
+        Error = $null
+        Environments = $normalized
+    }
+
+}
+
+function Get-LauncherEnvironmentDefinitions {
+
+    $result = Test-LauncherEnvironmentConfiguration
+    if(-not $result.IsValid){
+        return @()
+    }
+
+    return @($result.Environments)
+
+}
+
+function Save-LauncherEnvironments {
+
+    param(
+        [object[]]$Environments
+    )
+
+    if($null -eq $Environments -or $Environments.Count -eq 0){
+        throw "No se puede guardar una configuración vacía. Debe existir al menos un ambiente."
+    }
+
+    $normalized = @()
+    foreach($item in @($Environments)){
+        if($null -eq $item){
+            continue
+        }
+
+        $name = [string]$item.name
+        $domain = [string]$item.domain
+        $safe = [string]$item.safe
+
+        if([string]::IsNullOrWhiteSpace($name) -or [string]::IsNullOrWhiteSpace($domain) -or [string]::IsNullOrWhiteSpace($safe)){
+            throw "La configuración de ambientes tiene una estructura inválida. Cada ambiente debe incluir nombre, dominio y safe."
+        }
+
+        $normalized += [pscustomobject]@{
+            name = $name
+            domain = $domain
+            safe = $safe
+            default = [bool]$item.default
+        }
+    }
+
+    if($normalized.Count -eq 0){
+        throw "No se puede guardar una configuración vacía. Debe existir al menos un ambiente."
+    }
+
+    Save-JsonFile "environments.json" $normalized
+    return $normalized
+
+}
+
+function Get-LauncherEnvironmentByName {
+
+    param(
+        [string]$Environment
+    )
+
+    if([string]::IsNullOrWhiteSpace($Environment)){
+        return $null
+    }
+
+    foreach($item in Get-LauncherEnvironmentDefinitions){
+        if($item.name -ieq $Environment){
+            return $item
+        }
+    }
+
+    return $null
+
+}
+
+function Get-LauncherEnvironmentName {
+
+    param(
+        [string]$Environment
+    )
+
+    $definition = Get-LauncherEnvironmentByName -Environment $Environment
+    if($null -ne $definition){
+        return [string]$definition.name
+    }
+
+    return [string]$Environment
+
+}
+
+function Get-LauncherEnvironmentDomain {
+
+    param(
+        [string]$Environment
+    )
+
+    $definition = Get-LauncherEnvironmentByName -Environment $Environment
+    if($null -ne $definition -and -not [string]::IsNullOrWhiteSpace([string]$definition.domain)){
+        return [string]$definition.domain
+    }
+
+    return $null
+
+}
+
+function Get-LauncherEnvironmentSafe {
+
+    param(
+        [string]$Environment
+    )
+
+    $definition = Get-LauncherEnvironmentByName -Environment $Environment
+    if($null -ne $definition -and -not [string]::IsNullOrWhiteSpace([string]$definition.safe)){
+        return [string]$definition.safe
+    }
+
+    $settings = $null
+    try{
+        $settings = Get-JsonFile "settings.json"
+    }
+    catch{
+        $settings = $null
+    }
+
+    if($null -ne $settings -and $settings.PSObject.Properties.Name -contains "cyberArk"){
+        $cyberArk = $settings.cyberArk
+        if($null -ne $cyberArk -and $cyberArk.PSObject.Properties.Name -contains "safeByEnvironment"){
+            $safeMap = $cyberArk.safeByEnvironment
+            if($null -ne $safeMap -and $safeMap.PSObject.Properties.Name -contains $Environment){
+                return [string]$safeMap.$Environment
+            }
+        }
+    }
+
+    return $null
+
+}
+
+function Get-LauncherEnvironmentNames {
+
+    $names = @()
+    foreach($item in Get-LauncherEnvironmentDefinitions){
+        if(-not [string]::IsNullOrWhiteSpace([string]$item.name)){
+            $names += [string]$item.name
+        }
+    }
+
+    return $names
+
+}
+
+function Open-LauncherEnvironmentConfiguration {
+
+    $file = Join-Path $Global:ConfigFolder "environments.json"
+
+    if(!(Test-Path $file)){
+        $null = Get-LauncherEnvironmentDefinitions
+    }
+
+    if($IsWindows){
+        Start-Process notepad.exe $file | Out-Null
+    }
+    else{
+        Start-Process $file | Out-Null
+    }
+
+    return $file
+
+}
+
 function Ensure-LauncherSettingsShape {
 
     param(
@@ -208,8 +494,8 @@ function Ensure-LauncherSettingsShape {
     }
 
     $defaultValues = @{
-        selectedUser = "adm-A0836618"
-        lastEnvironment = "DEV"
+        selectedUser = "demo-user"
+        lastEnvironment = ""
         updateSource = ""
     }
 
@@ -223,7 +509,7 @@ function Ensure-LauncherSettingsShape {
         $Settings | Add-Member -Force -NotePropertyName "cyberArk" -NotePropertyValue ([pscustomobject]@{
             enabled = $false
             baseUrl = ""
-            loginUrl = "https://aon.cyberark.cloud/privilegecloud/Accounts"
+            loginUrl = "https://example.cyberark.example/privilegecloud/Accounts"
             username = ""
             password = ""
             appId = ""

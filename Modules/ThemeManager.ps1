@@ -5,30 +5,27 @@
         [string]$Environment
     )
 
-    switch($Environment){
+    if($null -eq $Form){
+        return
+    }
 
-        "DEV" {
+    $Form.BackColor = [System.Drawing.Color]::WhiteSmoke
 
-            $Form.BackColor =
-                [System.Drawing.Color]::Honeydew
+    if(-not [string]::IsNullOrWhiteSpace($Environment)){
+        $hash = 0
+        foreach($char in [char[]][string]$Environment){
+            $hash += [int][char]$char
         }
 
-        "QC" {
+        $palette = @(
+            [System.Drawing.Color]::WhiteSmoke,
+            [System.Drawing.Color]::AliceBlue,
+            [System.Drawing.Color]::Lavender,
+            [System.Drawing.Color]::Honeydew,
+            [System.Drawing.Color]::LemonChiffon
+        )
 
-            $Form.BackColor =
-                [System.Drawing.Color]::LemonChiffon
-        }
-
-        "PROD" {
-
-            $Form.BackColor =
-                [System.Drawing.Color]::MistyRose
-        }
-
-        default {
-
-            $Form.BackColor =
-                [System.Drawing.Color]::WhiteSmoke
-        }
+        $selectedIndex = $hash % $palette.Count
+        $Form.BackColor = $palette[$selectedIndex]
     }
 }

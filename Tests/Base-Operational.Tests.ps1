@@ -44,6 +44,23 @@ Describe "Base operativa: configuración y persistencia" {
         $actual.values[1] | Should Be "dos"
     }
 
+    It "Crea y utiliza la configuración de ambientes y dominios sin hardcode del cliente" {
+        $environmentConfig = Get-LauncherEnvironments
+        @($environmentConfig).Count | Should Be 3
+        $environmentConfig[0].name | Should Be "DEV"
+        $environmentConfig[0].domain | Should Be "devaonnet"
+        (Get-DomainByEnvironment "DEV") | Should Be "devaonnet"
+
+        Save-LauncherEnvironments @(
+            [PSCustomObject]@{ name = "INT"; domain = "corp-int"; safe = "SAFE_INT"; default = $true },
+            [PSCustomObject]@{ name = "PRD"; domain = "corp-prd"; safe = "SAFE_PRD" }
+        )
+
+        (Get-DomainByEnvironment "INT") | Should Be "corp-int"
+        (Get-DomainByEnvironment "PRD") | Should Be "corp-prd"
+        (Get-LauncherEnvironmentName "INT") | Should Be "INT"
+    }
+
     It "Crea una copia de seguridad de los archivos de configuración" {
         $backupPath = Backup-Configuration
 

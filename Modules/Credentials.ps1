@@ -1,14 +1,18 @@
-﻿function Get-DomainByEnvironment {
+﻿if(-not (Get-Command -Name Get-LauncherEnvironmentDomain -ErrorAction SilentlyContinue)){
+    $moduleRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+    . (Join-Path $moduleRoot "ConfigManager.ps1")
+}
+
+function Get-DomainByEnvironment {
 
     param($Environment)
 
-    switch ($Environment) {
-
-        "DEV"  { "devaonnet" }
-        "QC"   { "extadqc" }
-        "PROD" { "extad" }
-
+    $domain = Get-LauncherEnvironmentDomain -Environment $Environment
+    if(-not [string]::IsNullOrWhiteSpace($domain)){
+        return $domain
     }
+
+    throw "El entorno '$Environment' no está configurado en el archivo de ambientes."
 }
 
 function Add-Credential {

@@ -1,19 +1,20 @@
-﻿function Get-DomainByEnvironment {
+﻿if(-not (Get-Command -Name Get-LauncherEnvironmentDomain -ErrorAction SilentlyContinue)){
+    $moduleRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+    . (Join-Path $moduleRoot "ConfigManager.ps1")
+}
+
+function Get-DomainByEnvironment {
 
     param(
         [string]$Environment
     )
 
-    switch($Environment){
-
-        "DEV"  { return "devaonnet" }
-        "QC"   { return "extadqc" }
-        "PROD" { return "extad" }
-
-        default {
-            throw "Entorno no soportado."
-        }
+    $domain = Get-LauncherEnvironmentDomain -Environment $Environment
+    if(-not [string]::IsNullOrWhiteSpace($domain)){
+        return $domain
     }
+
+    throw "El entorno '$Environment' no está configurado en el archivo de ambientes."
 }
 
 function Start-AppLauncherApplication {
