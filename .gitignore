@@ -19,6 +19,7 @@ Config/settings.json
 Config/users.json
 Config/*.local.json
 Config/*.secret.*
+Logs/launcher.log
 
 # Permitir plantillas de ejemplo
 !Config/*.sample.json

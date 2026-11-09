@@ -6,6 +6,11 @@ Describe "Sprint 3: dashboard y métricas de actividad" {
         $script:testRoot = New-APPLauncherTestRoot
         . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\LogManager.ps1")
         $Global:LogFile = Join-Path $Global:LogFolder "launcher.log"
+        $script:envPrimary = (Get-LauncherEnvironmentDefinitions | Select-Object -First 1).name
+        $script:envSecondary = (Get-LauncherEnvironmentDefinitions | Select-Object -Skip 1 | Select-Object -First 1).name
+        $script:envTertiary = (Get-LauncherEnvironmentDefinitions | Select-Object -Skip 2 | Select-Object -First 1).name
+        if([string]::IsNullOrWhiteSpace($script:envSecondary)){ $script:envSecondary = $script:envPrimary }
+        if([string]::IsNullOrWhiteSpace($script:envTertiary)){ $script:envTertiary = $script:envPrimary }
     }
 
     AfterEach {
@@ -14,10 +19,10 @@ Describe "Sprint 3: dashboard y métricas de actividad" {
 
     It "Calcula última y más usada aplicación, y cuenta día y mes" {
         $lines = @(
-            "2026-10-22 09:00:00 | INFO | DEV | user-a | VSCode",
-            "2026-10-23 08:00:00 | INFO | DEV | user-a | SSMS",
-            "2026-10-23 10:00:00 | INFO | QC | user-b | SSMS",
-            "2026-09-23 11:00:00 | INFO | PROD | user-c | SSMS"
+            "2026-10-22 09:00:00 | INFO | $($script:envPrimary) | user-a | VSCode",
+            "2026-10-23 08:00:00 | INFO | $($script:envPrimary) | user-a | SSMS",
+            "2026-10-23 10:00:00 | INFO | $($script:envSecondary) | user-b | SSMS",
+            "2026-09-23 11:00:00 | INFO | $($script:envTertiary) | user-c | SSMS"
         )
         [IO.File]::WriteAllLines($Global:LogFile, $lines)
         $now = [datetime]::ParseExact(
@@ -38,10 +43,10 @@ Describe "Sprint 3: dashboard y métricas de actividad" {
 
     It "Cuenta eventos de proyecto aparte de las aperturas de aplicaciones" {
         $lines = @(
-            "2026-10-23 09:00:00 | INFO | DEV | user-a | SSMS",
-            "2026-10-23 09:00:02 | PROJECT | DEV | user-a | BAIS DEV",
+            "2026-10-23 09:00:00 | INFO | $($script:envPrimary) | user-a | SSMS",
+            "2026-10-23 09:00:02 | PROJECT | $($script:envPrimary) | user-a | BAIS $($script:envPrimary)",
             "2026-10-23 10:00:00 | PROJECT | - | - | Folder only",
-            "2026-10-22 10:00:00 | PROJECT | QC | user-b | BAIS DEV"
+            "2026-10-22 10:00:00 | PROJECT | $($script:envSecondary) | user-b | BAIS $($script:envPrimary)"
         )
         [IO.File]::WriteAllLines($Global:LogFile, $lines)
         $now = [datetime]::ParseExact(
@@ -53,7 +58,7 @@ Describe "Sprint 3: dashboard y métricas de actividad" {
         $metrics = Get-LauncherDashboardMetrics -Now $now -LogPath $Global:LogFile
 
         $metrics.LatestProject.Name | Should Be "Folder only"
-        $metrics.MostUsedProject.Name | Should Be "BAIS DEV"
+        $metrics.MostUsedProject.Name | Should Be "BAIS $($script:envPrimary)"
         $metrics.MostUsedProject.Count | Should Be 2
         $metrics.ExecutionsToday | Should Be 1
         $metrics.ExecutionsThisMonth | Should Be 1
@@ -62,9 +67,9 @@ Describe "Sprint 3: dashboard y métricas de actividad" {
     It "Ignora líneas malformadas, fechas inválidas y eventos sin nombre" {
         $lines = @(
             "not a log line",
-            "2026-99-99 25:61:61 | INFO | DEV | user-a | Invalid date",
-            "2026-10-23 09:00:00 | INFO | DEV | user-a | ",
-            "2026-10-23 09:01:00 | PROJECT | DEV | user-a | Valid project"
+            "2026-99-99 25:61:61 | INFO | $($script:envPrimary) | user-a | Invalid date",
+            "2026-10-23 09:00:00 | INFO | $($script:envPrimary) | user-a | ",
+            "2026-10-23 09:01:00 | PROJECT | $($script:envPrimary) | user-a | Valid project"
         )
         [IO.File]::WriteAllLines($Global:LogFile, $lines)
 
@@ -86,7 +91,7 @@ Describe "Sprint 3: dashboard y métricas de actividad" {
     }
 
     It "Limpia los logs sin borrar archivos de configuración" {
-        Write-LauncherLog -Environment "DEV" -User "test-user" -Application "SSMS"
+        Write-LauncherLog -Environment $script:envPrimary -User "test-user" -Application "SSMS"
         Clear-LauncherLogs
 
         [string]::IsNullOrWhiteSpace([IO.File]::ReadAllText($Global:LogFile)) | Should Be $true

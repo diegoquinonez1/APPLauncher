@@ -10,6 +10,9 @@ Describe "Sprint 1: lanzador dinámico de proyectos" {
         . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\AppLauncher.ps1")
         . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\ProjectLauncher.ps1")
         $Global:LogFile = Join-Path $Global:LogFolder "launcher.log"
+        $script:primaryEnvironment = (Get-LauncherEnvironmentDefinitions | Select-Object -First 1).name
+        $script:secondaryEnvironment = (Get-LauncherEnvironmentDefinitions | Select-Object -Skip 1 | Select-Object -First 1).name
+        if([string]::IsNullOrWhiteSpace($script:secondaryEnvironment)){ $script:secondaryEnvironment = $script:primaryEnvironment }
     }
 
     AfterEach {
@@ -19,7 +22,7 @@ Describe "Sprint 1: lanzador dinámico de proyectos" {
     It "Rechaza perfiles sin acciones, entorno o usuario" {
         $project = [PSCustomObject]@{
             name = "Empty"
-            environment = "DEV"
+            environment = $script:primaryEnvironment
             user = "test-user"
             startupApps = @()
             solution = ""
@@ -33,7 +36,7 @@ Describe "Sprint 1: lanzador dinámico de proyectos" {
         $project.environment = ""
         (Test-APPLauncherThrows { Start-ProjectProfile -Project $project }) | Should Be $true
 
-        $project.environment = "DEV"
+        $project.environment = $script:primaryEnvironment
         $project.user = ""
         (Test-APPLauncherThrows { Start-ProjectProfile -Project $project }) | Should Be $true
     }
@@ -47,7 +50,7 @@ Describe "Sprint 1: lanzador dinámico de proyectos" {
 
         $unsupported = [PSCustomObject]@{
             name = "Unsupported"
-            environment = "DEV"
+            environment = $script:primaryEnvironment
             user = "test-user"
             startupApps = @("NotAnApp")
             solution = ""
@@ -65,7 +68,7 @@ Describe "Sprint 1: lanzador dinámico de proyectos" {
 
         $project = [PSCustomObject]@{
             name = "Invalid solution"
-            environment = "DEV"
+            environment = $script:primaryEnvironment
             user = "test-user"
             startupApps = @("SSMS")
             solution = Join-Path $script:testRoot "missing.sln"
@@ -110,7 +113,7 @@ Describe "Sprint 1: lanzador dinámico de proyectos" {
         Save-Applications $applications
         $project = [PSCustomObject]@{
             name = "Application profile"
-            environment = "DEV"
+            environment = $script:primaryEnvironment
             user = "test-user"
             startupApps = @("SSMS")
             solution = ""
@@ -123,7 +126,7 @@ Describe "Sprint 1: lanzador dinámico de proyectos" {
         Start-ProjectProfile -Project $project
 
         Assert-MockCalled Start-Process -Times 1 -Scope It -ParameterFilter {
-            $FilePath -eq "runas.exe" -and $ArgumentList -like "*/user:devaonnet\test-user*"
+            $FilePath -eq "runas.exe" -and $ArgumentList -like "*/user:$((Get-DomainByEnvironment $script:primaryEnvironment))\test-user*"
         }
         Assert-MockCalled Start-Sleep -Times 1 -Scope It
         $metrics = Get-LauncherDashboardMetrics -LogPath $Global:LogFile
@@ -135,8 +138,11 @@ Describe "Sprint 1: lanzador dinámico de proyectos" {
 Describe "Sprint 2: administración de proyectos" {
 
     BeforeEach {
-    $script:testRoot = New-APPLauncherTestRoot
+        $script:testRoot = New-APPLauncherTestRoot
         . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\ProfileManager.ps1")
+        $script:primaryEnvironment = (Get-LauncherEnvironmentDefinitions | Select-Object -First 1).name
+        $script:secondaryEnvironment = (Get-LauncherEnvironmentDefinitions | Select-Object -Skip 1 | Select-Object -First 1).name
+        if([string]::IsNullOrWhiteSpace($script:secondaryEnvironment)){ $script:secondaryEnvironment = $script:primaryEnvironment }
     }
 
     AfterEach {
@@ -144,13 +150,13 @@ Describe "Sprint 2: administración de proyectos" {
     }
 
     It "Crea, actualiza y elimina perfiles persistidos" {
-        Add-Project -Name "One" -Environment "DEV" -User "test-user" -Solution "" -Folder "" -StartupApps @("SSMS")
+        Add-Project -Name "One" -Environment $script:primaryEnvironment -User "test-user" -Solution "" -Folder "" -StartupApps @("SSMS")
         (Get-Projects).projects[0].name | Should Be "One"
 
-        Update-Project -OriginalName "One" -Name "Renamed" -Environment "QC" -User "another-user" -Solution "" -Folder "" -StartupApps @("VSCode")
+        Update-Project -OriginalName "One" -Name "Renamed" -Environment $script:secondaryEnvironment -User "another-user" -Solution "" -Folder "" -StartupApps @("VSCode")
         $updated = (Get-Projects).projects[0]
         $updated.name | Should Be "Renamed"
-        $updated.environment | Should Be "QC"
+        $updated.environment | Should Be $script:secondaryEnvironment
         $updated.startupApps[0] | Should Be "VSCode"
 
         Remove-Project "Renamed"
@@ -158,14 +164,14 @@ Describe "Sprint 2: administración de proyectos" {
     }
 
     It "Rechaza proyectos duplicados al crear o renombrar" {
-        Add-Project -Name "One" -Environment "DEV" -User "test-user" -Solution "" -Folder "" -StartupApps @("SSMS")
-        Add-Project -Name "Two" -Environment "QC" -User "another-user" -Solution "" -Folder "" -StartupApps @("VSCode")
+        Add-Project -Name "One" -Environment $script:primaryEnvironment -User "test-user" -Solution "" -Folder "" -StartupApps @("SSMS")
+        Add-Project -Name "Two" -Environment $script:secondaryEnvironment -User "another-user" -Solution "" -Folder "" -StartupApps @("VSCode")
 
         (Test-APPLauncherThrows {
-            Add-Project -Name "One" -Environment "DEV" -User "test-user" -Solution "" -Folder "" -StartupApps @("SSMS")
+            Add-Project -Name "One" -Environment $script:primaryEnvironment -User "test-user" -Solution "" -Folder "" -StartupApps @("SSMS")
         }) | Should Be $true
         (Test-APPLauncherThrows {
-            Update-Project -OriginalName "Two" -Name "One" -Environment "QC" -User "another-user" -Solution "" -Folder "" -StartupApps @("VSCode")
+            Update-Project -OriginalName "Two" -Name "One" -Environment $script:secondaryEnvironment -User "another-user" -Solution "" -Folder "" -StartupApps @("VSCode")
         }) | Should Be $true
         @((Get-Projects).projects).Count | Should Be 2
     }

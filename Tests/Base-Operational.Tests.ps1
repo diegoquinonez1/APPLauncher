@@ -46,19 +46,49 @@ Describe "Base operativa: configuración y persistencia" {
 
     It "Crea y utiliza la configuración de ambientes y dominios sin hardcode del cliente" {
         $environmentConfig = Get-LauncherEnvironments
-        @($environmentConfig).Count | Should Be 3
-        $environmentConfig[0].name | Should Be "DEV"
-        $environmentConfig[0].domain | Should Be "devaonnet"
-        (Get-DomainByEnvironment "DEV") | Should Be "devaonnet"
+        @($environmentConfig).Count | Should BeGreaterThan 0
+        ($environmentConfig[0].PSObject.Properties.Name -contains "name") | Should Be $true
+        ($environmentConfig[0].PSObject.Properties.Name -contains "domain") | Should Be $true
+        ($environmentConfig[0].PSObject.Properties.Name -contains "safe") | Should Be $true
+        ($environmentConfig[0].PSObject.Properties.Name -contains "color") | Should Be $true
+        (Get-DomainByEnvironment $environmentConfig[0].name) | Should Be $environmentConfig[0].domain
 
         Save-LauncherEnvironments @(
-            [PSCustomObject]@{ name = "INT"; domain = "corp-int"; safe = "SAFE_INT"; default = $true },
-            [PSCustomObject]@{ name = "PRD"; domain = "corp-prd"; safe = "SAFE_PRD" }
+            [PSCustomObject]@{ name = "INT"; domain = "corp-int"; safe = "SAFE_INT"; color = "#00A676"; default = $true },
+            [PSCustomObject]@{ name = "PRD"; domain = "corp-prd"; safe = "SAFE_PRD"; color = "#FF6B35" }
         )
 
         (Get-DomainByEnvironment "INT") | Should Be "corp-int"
         (Get-DomainByEnvironment "PRD") | Should Be "corp-prd"
         (Get-LauncherEnvironmentName "INT") | Should Be "INT"
+        ((Get-LauncherEnvironmentNames) -contains "INT") | Should Be $true
+        ((Get-LauncherEnvironmentNames) -contains "PRD") | Should Be $true
+    }
+
+    It "Rechaza una configuración vacía o con estructura inválida y acepta más de un ambiente" {
+        $file = Join-Path $Global:ConfigFolder "environments.json"
+        $original = [IO.File]::ReadAllText($file)
+
+        try {
+            Set-Content -LiteralPath $file -Value "" -Encoding UTF8
+            $empty = Test-LauncherEnvironmentConfiguration
+            $empty.IsValid | Should Be $false
+            $empty.Error | Should Match "configurac|vacía|al menos un ambiente"
+
+            Set-Content -LiteralPath $file -Value '[{"name":"INT","domain":"corp-int","safe":"SAFE_INT"},{"name":"PRD","domain":"corp-prd","safe":"SAFE_PRD"}]' -Encoding UTF8
+            $valid = Get-LauncherEnvironmentDefinitions
+            @($valid).Count | Should Be 2
+            ((@($valid | ForEach-Object { $_.name }) -contains "INT")) | Should Be $true
+            ((@($valid | ForEach-Object { $_.name }) -contains "PRD")) | Should Be $true
+        }
+        finally {
+            if($original.Length -gt 0){
+                Set-Content -LiteralPath $file -Value $original -Encoding UTF8
+            }
+            else {
+                Remove-Item -LiteralPath $file -Force -ErrorAction SilentlyContinue
+            }
+        }
     }
 
     It "Crea una copia de seguridad de los archivos de configuración" {
@@ -102,7 +132,8 @@ Describe "Base operativa: usuarios y favoritos" {
     }
 
     It "Guarda y elimina favoritos" {
-        Add-Favorite -Name "Dev SSMS" -User "test-user" -Environment "DEV" -Application "SSMS"
+        $environmentName = (Get-LauncherEnvironmentDefinitions | Select-Object -First 1).name
+        Add-Favorite -Name "Dev SSMS" -User "test-user" -Environment $environmentName -Application "SSMS"
         $favorites = Get-Favorites
         @($favorites.favorites).Count | Should Be 1
         $favorites.favorites[0].Application | Should Be "SSMS"
@@ -132,23 +163,32 @@ Describe "Base operativa: aplicaciones y ejecución" {
     }
 
     It "Asigna el dominio correcto a cada entorno y rechaza entornos desconocidos" {
-        (Get-DomainByEnvironment "DEV") | Should Be "devaonnet"
-        (Get-DomainByEnvironment "QC") | Should Be "extadqc"
-        (Get-DomainByEnvironment "PROD") | Should Be "extad"
-        (Test-APPLauncherThrows { Get-DomainByEnvironment "UNKNOWN" }) | Should Be $true
+        $definitions = Get-LauncherEnvironmentDefinitions
+        $definitions.Count | Should BeGreaterThan 0
+
+        foreach($item in $definitions){
+            $resolved = Get-DomainByEnvironment $item.name
+            $resolved | Should Be $item.domain
+        }
+
+        $unknownEnvironment = "UNKNOWN-" + [guid]::NewGuid().ToString("N")
+        (Test-APPLauncherThrows { Get-DomainByEnvironment $unknownEnvironment }) | Should Be $true
     }
 
     It "Inicia la aplicación validada con runas y registra el evento después" {
         Mock Start-Process {}
         Mock Write-LauncherLog {}
 
-        Start-AppLauncherApplication -ApplicationName "SSMS" -Environment "DEV" -User "test-user"
+        $environmentName = (Get-LauncherEnvironmentDefinitions | Select-Object -First 1).name
+        $domain = Get-DomainByEnvironment $environmentName
+
+        Start-AppLauncherApplication -ApplicationName "SSMS" -Environment $environmentName -User "test-user"
 
         Assert-MockCalled Start-Process -Times 1 -ParameterFilter {
-            $FilePath -eq "runas.exe" -and $ArgumentList -like "*/user:devaonnet\test-user*"
+            $FilePath -eq "runas.exe" -and $ArgumentList -like "*/user:$domain\test-user*"
         }
         Assert-MockCalled Write-LauncherLog -Times 1 -ParameterFilter {
-            $Environment -eq "DEV" -and $User -eq "devaonnet\test-user" -and $Application -eq "SSMS"
+            $Environment -eq $environmentName -and $User -eq "$domain\test-user" -and $Application -eq "SSMS"
         }
     }
 
@@ -156,8 +196,10 @@ Describe "Base operativa: aplicaciones y ejecución" {
         Mock Start-Process {}
         Mock Write-LauncherLog {}
 
-        (Test-APPLauncherThrows { Start-AppLauncherApplication -ApplicationName "Unknown" -Environment "DEV" -User "test-user" }) | Should Be $true
-        (Test-APPLauncherThrows { Start-AppLauncherApplication -ApplicationName "SSMS" -Environment "UNKNOWN" -User "test-user" }) | Should Be $true
+        $environmentName = (Get-LauncherEnvironmentDefinitions | Select-Object -First 1).name
+        $unknownEnvironment = "UNKNOWN-" + [guid]::NewGuid().ToString("N")
+        (Test-APPLauncherThrows { Start-AppLauncherApplication -ApplicationName "Unknown" -Environment $environmentName -User "test-user" }) | Should Be $true
+        (Test-APPLauncherThrows { Start-AppLauncherApplication -ApplicationName "SSMS" -Environment $unknownEnvironment -User "test-user" }) | Should Be $true
 
         Assert-MockCalled Start-Process -Times 0 -Scope It
         Assert-MockCalled Write-LauncherLog -Times 0 -Scope It
@@ -191,24 +233,32 @@ Describe "Base operativa: aplicaciones y ejecución" {
 Describe "Base operativa: tema por entorno" {
 
     BeforeEach {
+        $script:testRoot = New-APPLauncherTestRoot
         Add-Type -AssemblyName System.Windows.Forms
         Add-Type -AssemblyName System.Drawing
+        . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\ConfigManager.ps1")
         . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\ThemeManager.ps1")
         $script:form = New-Object System.Windows.Forms.Form
     }
 
     AfterEach {
         $script:form.Dispose()
+        Remove-APPLauncherTestRoot $script:testRoot
     }
 
-    It "Aplica colores diferenciados para DEV, QC, PROD y el valor predeterminado" {
-        Set-EnvironmentTheme $script:form "DEV"
-        $script:form.BackColor | Should Be ([System.Drawing.Color]::Honeydew)
-        Set-EnvironmentTheme $script:form "QC"
-        $script:form.BackColor | Should Be ([System.Drawing.Color]::LemonChiffon)
-        Set-EnvironmentTheme $script:form "PROD"
-        $script:form.BackColor | Should Be ([System.Drawing.Color]::MistyRose)
+    It "Aplica colores por entorno desde la configuración y usa un valor seguro cuando no existe color" {
+        Save-LauncherEnvironments @(
+            [PSCustomObject]@{ name = "ALPHA"; domain = "alpha.local"; safe = "SAFE_ALPHA"; color = "#FF6600"; default = $true },
+            [PSCustomObject]@{ name = "BETA"; domain = "beta.local"; safe = "SAFE_BETA"; color = "#00A676" }
+        )
+
+        Set-EnvironmentTheme $script:form "ALPHA"
+        $script:form.BackColor.ToArgb() | Should Be ([System.Drawing.ColorTranslator]::FromHtml("#FF6600")).ToArgb()
+
+        Set-EnvironmentTheme $script:form "BETA"
+        $script:form.BackColor.ToArgb() | Should Be ([System.Drawing.ColorTranslator]::FromHtml("#00A676")).ToArgb()
+
         Set-EnvironmentTheme $script:form "unknown"
-        $script:form.BackColor | Should Be ([System.Drawing.Color]::WhiteSmoke)
+        $script:form.BackColor.ToArgb() | Should Be ([System.Drawing.Color]::WhiteSmoke).ToArgb()
     }
 }

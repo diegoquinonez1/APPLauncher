@@ -282,6 +282,11 @@ function Test-LauncherEnvironmentConfiguration {
         $name = [string]$item.name
         $domain = [string]$item.domain
         $safe = [string]$item.safe
+        $color = [string]$item.color
+        $isDefault = [bool]$item.default
+        if($null -ne $item.PSObject.Properties["isDefault"]){
+            $isDefault = [bool]$item.isDefault
+        }
 
         if([string]::IsNullOrWhiteSpace($name) -or [string]::IsNullOrWhiteSpace($domain) -or [string]::IsNullOrWhiteSpace($safe)){
             return [PSCustomObject]@{
@@ -291,11 +296,25 @@ function Test-LauncherEnvironmentConfiguration {
             }
         }
 
+        if(-not [string]::IsNullOrWhiteSpace($color)){
+            try {
+                [void][System.Drawing.ColorTranslator]::FromHtml($color)
+            }
+            catch {
+                return [PSCustomObject]@{
+                    IsValid = $false
+                    Error = "La configuración de ambientes tiene un color inválido. Usa un valor hexadecimal como #FF6600."
+                    Environments = @()
+                }
+            }
+        }
+
         $normalized += [pscustomobject]@{
             name = $name
             domain = $domain
             safe = $safe
-            default = [bool]$item.default
+            color = $color
+            default = $isDefault
         }
     }
 
@@ -345,16 +364,31 @@ function Save-LauncherEnvironments {
         $name = [string]$item.name
         $domain = [string]$item.domain
         $safe = [string]$item.safe
+        $color = [string]$item.color
+        $isDefault = [bool]$item.default
+        if($null -ne $item.PSObject.Properties["isDefault"]){
+            $isDefault = [bool]$item.isDefault
+        }
 
         if([string]::IsNullOrWhiteSpace($name) -or [string]::IsNullOrWhiteSpace($domain) -or [string]::IsNullOrWhiteSpace($safe)){
             throw "La configuración de ambientes tiene una estructura inválida. Cada ambiente debe incluir nombre, dominio y safe."
+        }
+
+        if(-not [string]::IsNullOrWhiteSpace($color)){
+            try {
+                [void][System.Drawing.ColorTranslator]::FromHtml($color)
+            }
+            catch {
+                throw "La configuración de ambientes tiene un color inválido. Usa un valor hexadecimal como #FF6600."
+            }
         }
 
         $normalized += [pscustomobject]@{
             name = $name
             domain = $domain
             safe = $safe
-            default = [bool]$item.default
+            color = $color
+            default = $isDefault
         }
     }
 
@@ -364,6 +398,32 @@ function Save-LauncherEnvironments {
 
     Save-JsonFile "environments.json" $normalized
     return $normalized
+
+}
+
+function Get-LauncherEnvironmentColor {
+
+    param(
+        [string]$Environment
+    )
+
+    $definition = Get-LauncherEnvironmentByName -Environment $Environment
+    if($null -eq $definition){
+        return $null
+    }
+
+    foreach($candidate in @($definition.color, $definition.themeColor, $definition.backgroundColor, $definition.hexColor)){
+        if(-not [string]::IsNullOrWhiteSpace([string]$candidate)){
+            try {
+                return [System.Drawing.ColorTranslator]::FromHtml([string]$candidate)
+            }
+            catch {
+                continue
+            }
+        }
+    }
+
+    return $null
 
 }
 
@@ -530,7 +590,7 @@ function Ensure-LauncherSettingsShape {
     $cyberArkDefaults = @{
         enabled = $false
         baseUrl = ""
-        loginUrl = "https://aon.cyberark.cloud/privilegecloud/Accounts"
+        loginUrl = "https://example.cyberark.example/privilegecloud/Accounts"
         username = ""
         password = ""
         appId = ""

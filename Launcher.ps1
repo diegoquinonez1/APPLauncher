@@ -298,9 +298,7 @@ function RefreshDashboard {
         $null -eq $lblDashTopProject -or
         $null -eq $lblDashToday -or
         $null -eq $lblDashMonth -or
-        $null -eq $lblDashCredentialDev -or
-        $null -eq $lblDashCredentialQc -or
-        $null -eq $lblDashCredentialProd
+        $null -eq $credentialStatusLabels
     ){
         return
     }
@@ -544,14 +542,17 @@ for($index = 0; $index -lt $dashboardMetricLabels.Count; $index++){
     $grpDashboard.Controls.Add($dashboardMetricLabels[$index])
 }
 
-$lblDashCredentialDev = New-Object System.Windows.Forms.Label
-$lblDashCredentialQc = New-Object System.Windows.Forms.Label
-$lblDashCredentialProd = New-Object System.Windows.Forms.Label
-$credentialStatusLabels = @(
-    $lblDashCredentialDev,
-    $lblDashCredentialQc,
-    $lblDashCredentialProd
-)
+$credentialStatusLabels = @()
+foreach($environmentName in @(Get-LauncherEnvironmentNames)){
+    $statusLabel = New-Object System.Windows.Forms.Label
+    $statusLabel.Tag = $environmentName
+    $statusLabel.Text = ""
+    $statusLabel.Location = New-Object Drawing.Point(12, 180)
+    $statusLabel.Size = New-Object Drawing.Size(320,18)
+    $statusLabel.AutoEllipsis = $true
+    $credentialStatusLabels += $statusLabel
+    $grpDashboard.Controls.Add($statusLabel)
+}
 
 for($index = 0; $index -lt $credentialStatusLabels.Count; $index++){
     $credentialStatusLabels[$index].Location = New-Object Drawing.Point(
@@ -560,7 +561,6 @@ for($index = 0; $index -lt $credentialStatusLabels.Count; $index++){
     )
     $credentialStatusLabels[$index].Size = New-Object Drawing.Size(320,18)
     $credentialStatusLabels[$index].AutoEllipsis = $true
-    $grpDashboard.Controls.Add($credentialStatusLabels[$index])
 }
 
 $lblDashUser.Visible = $false

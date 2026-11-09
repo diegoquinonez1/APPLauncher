@@ -10,8 +10,9 @@ Describe "Sprint 6: exportación e importación de perfil" {
         . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\CredentialManager.ps1")
         . (Join-Path $script:APPLauncherTestRepositoryRoot "Modules\ProfileTransfer.ps1")
         $script:passphrase = ConvertTo-SecureString "portable-profile-demo" -AsPlainText -Force
+        $script:primaryEnvironment = (Get-LauncherEnvironmentDefinitions | Select-Object -First 1).name
         Save-LauncherCredential `
-            -Environment "DEV" `
+            -Environment $script:primaryEnvironment `
             -User "test-user" `
             -SecretValue "profile-demo-value"
     }
@@ -81,7 +82,7 @@ Describe "Sprint 6: exportación e importación de perfil" {
         (Get-Users).users[0] | Should Be "test-user"
         $localCredential = (Get-Credentials).credentials[0]
         $localCredential.password.Contains("profile-demo-value") | Should Be $false
-        (Get-LauncherCredential "DEV" "test-user").Password | Should Be "profile-demo-value"
+        (Get-LauncherCredential $script:primaryEnvironment "test-user").Password | Should Be "profile-demo-value"
         (Get-ChildItem -LiteralPath $Global:BackupFolder -Directory).Count | Should Be 1
     }
 

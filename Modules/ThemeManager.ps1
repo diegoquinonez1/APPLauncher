@@ -11,21 +11,15 @@
 
     $Form.BackColor = [System.Drawing.Color]::WhiteSmoke
 
-    if(-not [string]::IsNullOrWhiteSpace($Environment)){
-        $hash = 0
-        foreach($char in [char[]][string]$Environment){
-            $hash += [int][char]$char
+    if($null -ne (Get-Command -Name Get-LauncherEnvironmentColor -ErrorAction SilentlyContinue)){
+        $configuredColor = Get-LauncherEnvironmentColor -Environment $Environment
+        if($null -ne $configuredColor){
+            $Form.BackColor = $configuredColor
+            return
         }
+    }
 
-        $palette = @(
-            [System.Drawing.Color]::WhiteSmoke,
-            [System.Drawing.Color]::AliceBlue,
-            [System.Drawing.Color]::Lavender,
-            [System.Drawing.Color]::Honeydew,
-            [System.Drawing.Color]::LemonChiffon
-        )
-
-        $selectedIndex = $hash % $palette.Count
-        $Form.BackColor = $palette[$selectedIndex]
+    if(-not [string]::IsNullOrWhiteSpace($Environment) -and $null -ne (Get-Command -Name Get-LauncherEnvironmentColor -ErrorAction SilentlyContinue)){
+        $Form.BackColor = [System.Drawing.Color]::WhiteSmoke
     }
 }

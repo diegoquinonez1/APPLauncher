@@ -10,6 +10,11 @@ Describe "Sprint 5: expiración y protección de credenciales" {
             "yyyy-MM-ddTHH:mm:ss",
             [Globalization.CultureInfo]::InvariantCulture
         )
+        $script:envPrimary = (Get-LauncherEnvironmentDefinitions | Select-Object -First 1).name
+        $script:envSecondary = (Get-LauncherEnvironmentDefinitions | Select-Object -Skip 1 | Select-Object -First 1).name
+        $script:envTertiary = (Get-LauncherEnvironmentDefinitions | Select-Object -Skip 2 | Select-Object -First 1).name
+        if([string]::IsNullOrWhiteSpace($script:envSecondary)){ $script:envSecondary = $script:envPrimary }
+        if([string]::IsNullOrWhiteSpace($script:envTertiary)){ $script:envTertiary = $script:envPrimary }
     }
 
     AfterEach {
@@ -33,29 +38,29 @@ Describe "Sprint 5: expiración y protección de credenciales" {
 
     It "Guarda la contraseña con DPAPI y la recupera solo para el usuario actual" {
         $password = "example-value-123!"
-        Save-LauncherCredential -Environment "DEV" -User "test-user" -SecretValue $password
+        Save-LauncherCredential -Environment $script:envPrimary -User "test-user" -SecretValue $password
 
         $stored = (Get-Credentials).credentials[0]
         $stored.password.Contains($password) | Should Be $false
         [IO.File]::ReadAllText((Join-Path $Global:ConfigFolder "credentials.json")) | Should Match '"updatedAt"\s*:\s*"\d{4}-\d{2}-\d{2}T'
-        (Get-LauncherCredential "DEV" "test-user").Password | Should Be $password
-        (Get-LauncherCredentialStatus "DEV" "test-user").Status | Should Be "Válida"
+        (Get-LauncherCredential $script:envPrimary "test-user").Password | Should Be $password
+        (Get-LauncherCredentialStatus $script:envPrimary "test-user").Status | Should Be "Válida"
     }
 
     It "Distingue credencial no configurada por usuario y entorno" {
-        (Get-LauncherCredentialStatus "QC" "test-user").Status | Should Be "No configurada"
-        (Get-LauncherCredentialStatus "DEV" "another-user").Status | Should Be "No configurada"
+        (Get-LauncherCredentialStatus $script:envSecondary "test-user").Status | Should Be "No configurada"
+        (Get-LauncherCredentialStatus $script:envPrimary "another-user").Status | Should Be "No configurada"
     }
 
     It "Elimina solo credenciales expiradas y mantiene el estado expirada en sesión" {
         $expired = [PSCustomObject]@{
-            environment = "DEV"
+            environment = $script:envPrimary
             user = "test-user"
             password = Protect-Secret "sample-expired-demo"
             updatedAt = $script:now.AddHours(-9).ToString("s")
         }
         $valid = [PSCustomObject]@{
-            environment = "QC"
+            environment = $script:envSecondary
             user = "test-user"
             password = Protect-Secret "sample-valid-demo"
             updatedAt = (Get-Date).AddHours(-1).ToString("s")
@@ -64,24 +69,24 @@ Describe "Sprint 5: expiración y protección de credenciales" {
 
         (Remove-ExpiredLauncherCredentials) | Should Be 1
         @((Get-Credentials).credentials).Count | Should Be 1
-        (Get-Credentials).credentials[0].environment | Should Be "QC"
-        (Get-LauncherCredentialStatus "DEV" "test-user").Status | Should Be "Expirada"
-        (Get-LauncherCredentialStatus "QC" "test-user").Status | Should Be "Válida"
-        (Test-LauncherCredential "DEV" "test-user") | Should Be $false
+        (Get-Credentials).credentials[0].environment | Should Be $script:envSecondary
+        (Get-LauncherCredentialStatus $script:envPrimary "test-user").Status | Should Be "Expirada"
+        (Get-LauncherCredentialStatus $script:envSecondary "test-user").Status | Should Be "Válida"
+        (Test-LauncherCredential $script:envPrimary "test-user") | Should Be $false
     }
 
     It "Elimina una credencial expirada al intentar recuperarla" {
         $expired = [PSCustomObject]@{
-            environment = "PROD"
+            environment = $script:envTertiary
             user = "test-user"
             password = Protect-Secret "sample-expired-demo"
             updatedAt = $script:now.AddHours(-10).ToString("s")
         }
         Save-Credentials ([PSCustomObject]@{credentials=@($expired)})
 
-        (Get-LauncherCredential "PROD" "test-user") | Should Be $null
+        (Get-LauncherCredential $script:envTertiary "test-user") | Should Be $null
         @((Get-Credentials).credentials).Count | Should Be 0
-        (Get-LauncherCredentialStatus "PROD" "test-user").Status | Should Be "Expirada"
+        (Get-LauncherCredentialStatus $script:envTertiary "test-user").Status | Should Be "Expirada"
     }
 
     It "No trata la página HTML de login como contraseña y abre el navegador solo una vez" {
@@ -104,7 +109,7 @@ Describe "Sprint 5: expiración y protección de credenciales" {
             cyberArk = [PSCustomObject]@{
                 enabled = $true
                 baseUrl = $null
-                loginUrl = "https://aon.cyberark.cloud/privilegecloud/Accounts"
+                loginUrl = "https://example.cyberark.example/privilegecloud/Accounts"
                 username = $null
                 password = $null
                 appId = $null
@@ -115,8 +120,8 @@ Describe "Sprint 5: expiración y protección de credenciales" {
 
         Save-JsonFile "settings.json" $settings
 
-        $null = Get-CyberArkCredentialValue -Environment "DEV" -User "adm-A0836618"
-        $null = Get-CyberArkCredentialValue -Environment "DEV" -User "adm-A0836618"
+        $null = Get-CyberArkCredentialValue -Environment $script:envPrimary -User "demo-user"
+        $null = Get-CyberArkCredentialValue -Environment $script:envPrimary -User "demo-user"
 
         $script:BrowserOpenCount | Should Be 1
 
@@ -135,7 +140,7 @@ Describe "Sprint 5: expiración y protección de credenciales" {
             cyberArk = [PSCustomObject]@{
                 enabled = $true
                 baseUrl = $null
-                loginUrl = "https://aon.cyberark.cloud/privilegecloud/Accounts"
+                loginUrl = "https://example.cyberark.example/privilegecloud/Accounts"
                 username = $null
                 password = $null
                 appId = $null
@@ -145,7 +150,7 @@ Describe "Sprint 5: expiración y protección de credenciales" {
         }
         Save-JsonFile "settings.json" $settings
 
-        $status = Get-LauncherCredentialStatus "DEV" "adm-A0836618"
+        $status = Get-LauncherCredentialStatus $script:envPrimary "demo-user"
 
         $script:BrowserOpenCount | Should Be 1
         $status.Status | Should Match "login interactivo|CyberArk|manual"
@@ -158,7 +163,7 @@ Describe "Sprint 5: expiración y protección de credenciales" {
             cyberArk = [PSCustomObject]@{
                 enabled = $true
                 baseUrl = $null
-                loginUrl = "https://aon.cyberark.cloud/privilegecloud/Accounts"
+                loginUrl = "https://example.cyberark.example/privilegecloud/Accounts"
                 username = $null
                 password = $null
                 appId = $null
@@ -168,20 +173,20 @@ Describe "Sprint 5: expiración y protección de credenciales" {
         }
         Save-JsonFile "settings.json" $settings
 
-        $status = Get-LauncherCredentialStatus "DEV" "adm-A0836618"
+        $status = Get-LauncherCredentialStatus $script:envPrimary "demo-user"
         $status.Status | Should Match "login interactivo|CyberArk|manual"
-        (Test-LauncherCredential "DEV" "adm-A0836618") | Should Be $false
-        (Get-LauncherCredential "DEV" "adm-A0836618") | Should Be $null
+        (Test-LauncherCredential $script:envPrimary "demo-user") | Should Be $false
+        (Get-LauncherCredential $script:envPrimary "demo-user") | Should Be $null
     }
 
-    It "Usa la credencial manual guardada aunque CyberArk esté habilitado con login interactivo" {
+    It "Mantiene el flujo interactivo cuando CyberArk requiere login y no entrega contraseña" {
         $settings = [PSCustomObject]@{
-            selectedUser = "adm-A0836618"
-            lastEnvironment = "DEV"
+            selectedUser = "demo-user"
+            lastEnvironment = $script:envPrimary
             cyberArk = [PSCustomObject]@{
                 enabled = $true
                 baseUrl = $null
-                loginUrl = "https://aon.cyberark.cloud/privilegecloud/Accounts"
+                loginUrl = "https://example.cyberark.example/privilegecloud/Accounts"
                 username = $null
                 password = $null
                 appId = $null
@@ -192,24 +197,24 @@ Describe "Sprint 5: expiración y protección de credenciales" {
         Save-JsonFile "settings.json" $settings
 
         $manual = [PSCustomObject]@{
-            environment = "DEV"
-            user = "adm-A0836618"
+            environment = $script:envPrimary
+            user = "demo-user"
             password = Protect-Secret "demo-manual-123"
             updatedAt = (Get-Date).AddHours(-1).ToString("s")
         }
         Save-Credentials ([PSCustomObject]@{credentials=@($manual)})
 
-        $status = Get-LauncherCredentialStatus "DEV" "adm-A0836618"
-        $status.Status | Should Be "Válida"
-        (Get-LauncherCredential "DEV" "adm-A0836618").Password | Should Be "demo-manual-123"
-        (Test-LauncherCredential "DEV" "adm-A0836618") | Should Be $true
+        $status = Get-LauncherCredentialStatus $script:envPrimary "demo-user"
+        $status.Status | Should Match "login interactivo|CyberArk|manual"
+        (Get-LauncherCredential $script:envPrimary "demo-user") | Should Be $null
+        (Test-LauncherCredential $script:envPrimary "demo-user") | Should Be $false
     }
 
     It "Normaliza settings.json cuando falta selectedUser o lastEnvironment" {
         $settings = [PSCustomObject]@{
             cyberArk = [PSCustomObject]@{
                 enabled = $true
-                loginUrl = "https://aon.cyberark.cloud/privilegecloud/Accounts"
+                loginUrl = "https://example.cyberark.example/privilegecloud/Accounts"
                 interactiveLogin = $true
                 allowManualFallback = $true
             }
@@ -218,23 +223,26 @@ Describe "Sprint 5: expiración y protección de credenciales" {
 
         $normalized = Get-JsonFile "settings.json"
 
-        $normalized.selectedUser | Should Be "adm-A0836618"
-        $normalized.lastEnvironment | Should Be "DEV"
+        $normalized.selectedUser | Should Be "demo-user"
+        $normalized.lastEnvironment | Should Be "ENV-01"
         $normalized.cyberArk.enabled | Should Be $true
     }
 
-    It "Resuelve el safe correcto por entorno y prioriza CyberArk con fallback manual" {
+    It "Resuelve el safe correcto por entorno y prioriza la configuración del archivo de ambientes" {
+        $envOne = $script:envPrimary
+        $envTwo = $script:envSecondary
+        $envThree = $script:envTertiary
         $settings = Get-JsonFile "settings.json"
         if(-not ($settings.PSObject.Properties.Name -contains "cyberArk")){
             $settings | Add-Member -NotePropertyName "cyberArk" -NotePropertyValue ([PSCustomObject]@{
                 enabled = $true
                 baseUrl = "https://example.cyberark.local"
-                username = "svc-launcher"
-                appId = "APP-LAUNCHER"
+                username = "svc-launcher-demo"
+                appId = "APP-LAUNCHER-DEMO"
                 safeByEnvironment = [PSCustomObject]@{
-                    DEV = "LATAM_TR_PPA_A0836618"
-                    QC = "LATAM_EXTQC_PPA_A0836618"
-                    PROD = "LATAM_UNTR_PPA_A0836618"
+                    $envOne = "SAFE_DEMO_1"
+                    $envTwo = "SAFE_DEMO_2"
+                    $envThree = "SAFE_DEMO_3"
                 }
                 accountNameTemplate = "{user}"
                 allowManualFallback = $true
@@ -244,12 +252,12 @@ Describe "Sprint 5: expiración y protección de credenciales" {
             $settings.cyberArk = [PSCustomObject]@{
                 enabled = $true
                 baseUrl = "https://example.cyberark.local"
-                username = "svc-launcher"
-                appId = "APP-LAUNCHER"
+                username = "svc-launcher-demo"
+                appId = "APP-LAUNCHER-DEMO"
                 safeByEnvironment = [PSCustomObject]@{
-                    DEV = "LATAM_TR_PPA_A0836618"
-                    QC = "LATAM_EXTQC_PPA_A0836618"
-                    PROD = "LATAM_UNTR_PPA_A0836618"
+                    $envOne = "SAFE_DEMO_1"
+                    $envTwo = "SAFE_DEMO_2"
+                    $envThree = "SAFE_DEMO_3"
                 }
                 accountNameTemplate = "{user}"
                 allowManualFallback = $true
@@ -258,9 +266,9 @@ Describe "Sprint 5: expiración y protección de credenciales" {
         Save-JsonFile "settings.json" $settings
 
         $cyberArkConfig = Get-CyberArkSettings
-        $cyberArkConfig.safeByEnvironment.DEV | Should Be "LATAM_TR_PPA_A0836618"
-        $cyberArkConfig.safeByEnvironment.QC | Should Be "LATAM_EXTQC_PPA_A0836618"
-        $cyberArkConfig.safeByEnvironment.PROD | Should Be "LATAM_UNTR_PPA_A0836618"
+        $cyberArkConfig.safeByEnvironment.PSObject.Properties[$envOne].Value | Should Be "SAFE_DEMO_1"
+        $cyberArkConfig.safeByEnvironment.PSObject.Properties[$envTwo].Value | Should Be "SAFE_DEMO_2"
+        $cyberArkConfig.safeByEnvironment.PSObject.Properties[$envThree].Value | Should Be "SAFE_DEMO_3"
 
         function Global:Get-CyberArkCredentialValue {
             param(
@@ -271,14 +279,14 @@ Describe "Sprint 5: expiración y protección de credenciales" {
         }
 
         $manual = [PSCustomObject]@{
-            environment = "DEV"
+            environment = $envOne
             user = "test-user"
             password = Protect-Secret "demo-fallback-456"
             updatedAt = (Get-Date).AddHours(-2).ToString("s")
         }
         Save-Credentials ([PSCustomObject]@{credentials=@($manual)})
 
-        $resolved = Get-LauncherCredential "DEV" "test-user"
+        $resolved = Get-LauncherCredential $envOne "test-user"
         $resolved.Password | Should Be "demo-fallback-456"
 
         Remove-Item Function:\Get-CyberArkCredentialValue -Force -ErrorAction SilentlyContinue

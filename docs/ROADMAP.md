@@ -25,7 +25,7 @@ La versión 4.1 dejó una base sólida para el crecimiento futuro del Launcher.
 - Selección de usuario desde la interfaz principal.
 
 #### 2. Gestión de credenciales
-- Administración de credenciales por usuario y entorno (`DEV`, `QC`, `PROD`).
+- Administración de credenciales por usuario y entorno, con nombres dinámicos definidos en la configuración.
 - Almacenamiento seguro en `credentials.json`.
 - Contraseñas cifradas mediante DPAPI (`ConvertFrom-SecureString`).
 - Verificación de existencia de credenciales.
@@ -51,10 +51,7 @@ Detección automática de:
 - Report Builder
 
 #### 6. Temas dinámicos
-Cambio automático de colores según el entorno:
-- DEV
-- QC
-- PROD
+Cambio automático de colores según el entorno configurado, con nombres y valores leídos desde `Config/environments.json`.
 
 #### 7. Logs
 - Registro automático de ejecuciones en `Logs/launcher.log`.
@@ -117,9 +114,9 @@ El Launcher genera un botón por cada proyecto de `Config/projects.json`. Al sel
 {
   "projects": [
     {
-      "name": "BAIS DEV",
-      "environment": "DEV",
-      "user": "adm-A0836618",
+      "name": "Cliente ALPHA",
+      "environment": "ALPHA",
+      "user": "demo-user",
       "startupApps": ["SSMS", "VisualStudio", "VSCode"],
       "solution": "",
       "folder": ""
@@ -247,7 +244,7 @@ La vigencia se calcula desde ese campo y vence a las 8 horas. Guardar una contra
 - **No configurada:** no hay credencial para el usuario y entorno.
 
 ### Dashboard de credenciales
-El dashboard principal presenta el estado de DEV, QC y PROD para el usuario seleccionado. El formulario también permite verificar el estado de la credencial del entorno elegido.
+El dashboard principal presenta el estado de los entornos configurados para el usuario seleccionado. El formulario también permite verificar el estado de la credencial del entorno elegido.
 
 ### Beneficios
 - Mayor visibilidad.

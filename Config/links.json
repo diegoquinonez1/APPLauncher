@@ -1,8 +1,8 @@
 ﻿{
     "links":  [
                   {
-                      "name":  "SSRS PROD BAIS",
-                      "url":  "http://nclmwdpdbs10182.extad.aon.net/Reports"
+                      "name":  "SSRS BAIS",
+                      "url":  "https://example.com/reports"
                   }
               ]
 }

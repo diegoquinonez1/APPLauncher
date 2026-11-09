@@ -19,7 +19,7 @@ El archivo `Launcher.ps1` determina la raíz de instalación, carga los módulos
 ## Funcionalidades
 
 - Inicio de SSMS, Visual Studio, VS Code y Report Builder. Las rutas se detectan en ubicaciones habituales y se guardan en `Config/applications.json`.
-- Selección de usuario y entorno (`DEV`, `QC` o `PROD`). El inicio se realiza con `runas.exe` y el modificador `/netonly`; el launcher valida la ruta y el entorno antes de iniciar el proceso.
+- Selección de usuario y entorno (`Por ambiente`). El inicio se realiza con `runas.exe` y el modificador `/netonly`; el launcher valida la ruta y el entorno antes de iniciar el proceso.
 - Perfiles de proyecto con aplicaciones de arranque, solución `.sln` y/o carpeta de trabajo. Se validan todas las rutas antes de ejecutar acciones.
 - Favoritos vinculados a usuario, entorno y aplicación.
 - Accesos web persistidos, limitados a URLs absolutas `http` o `https` y sin credenciales embebidas.
@@ -221,7 +221,7 @@ Los módulos indicados como **activos** se cargan desde `Launcher.ps1`. `ApplyUp
 | `Modules/ProjectsForm.ps1` | Activo | UI para administrar perfiles, rutas de solución/carpeta y aplicaciones de inicio. |
 | `Modules/QuickLinks.ps1` | Activo | Normaliza y valida URLs HTTP/HTTPS, impide nombres duplicados, persiste en `links.json` y abre el destino. |
 | `Modules/QuickLinksForm.ps1` | Activo | UI CRUD para accesos web. |
-| `Modules/ThemeManager.ps1` | Activo | Aplica colores visuales diferenciados para DEV, QC y PROD. |
+| `Modules/ThemeManager.ps1` | Activo | Aplica colores visuales diferenciados por ambiente. |
 | `Modules/UiHelpers.ps1` | Activo | Message boxes comunes y `Invoke-Safely`, que captura excepciones, las registra y las presenta al usuario. |
 | `Modules/UpdateManager.ps1` | Activo | Consulta versiones, valida nombres/rutas y SHA-256 del ZIP/manifiesto, extrae staging temporal y entrega la actualización al helper. |
 | `Modules/UserManager.ps1` | Activo | CRUD de usuarios en `users.json`; impide eliminar o modificar el usuario predeterminado y evita duplicados. |

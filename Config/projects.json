@@ -1,9 +1,9 @@
 ﻿{
     "projects":  [
                      {
-                         "name":  "BAIS DEV",
-                         "environment":  "DEV",
-                         "user":  "adm-A0836618",
+                         "name":  "Cliente ALPHA",
+                         "environment":  "ALPHA",
+                         "user":  "demo-user",
                          "solution":  "",
                          "folder":  "",
                          "startupApps":  [
@@ -13,9 +13,9 @@
                                          ]
                      },
                      {
-                         "name":  "BAIS PROD",
-                         "environment":  "PROD",
-                         "user":  "adm-A0836618",
+                         "name":  "Cliente BETA",
+                         "environment":  "BETA",
+                         "user":  "demo-user",
                          "solution":  "",
                          "folder":  "",
                          "startupApps":  [

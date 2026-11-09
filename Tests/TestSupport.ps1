@@ -65,10 +65,16 @@ function New-APPLauncherTestRoot {
         New-Item -ItemType Directory -Path $folder -Force | Out-Null
     }
 
+    $defaultEnvironmentNames = @(
+        [PSCustomObject]@{ name = "ENV-01"; domain = "env01.example.local"; safe = "SAFE_DEMO_ENV01"; color = "#2E86AB"; default = $true },
+        [PSCustomObject]@{ name = "ENV-02"; domain = "env02.example.local"; safe = "SAFE_DEMO_ENV02"; color = "#F18F01" },
+        [PSCustomObject]@{ name = "ENV-03"; domain = "env03.example.local"; safe = "SAFE_DEMO_ENV03"; color = "#C73E1D" }
+    )
+
     $defaults = @{
         "settings.json" = [PSCustomObject]@{
             selectedUser = "test-user"
-            lastEnvironment = "DEV"
+            lastEnvironment = "ENV-01"
             updateSource = ""
         }
         "users.json" = [PSCustomObject]@{
@@ -94,6 +100,7 @@ function New-APPLauncherTestRoot {
         "credentials.json" = [PSCustomObject]@{
             credentials = @()
         }
+        "environments.json" = $defaultEnvironmentNames
     }
 
     foreach($fileName in $defaults.Keys){
@@ -128,7 +135,7 @@ function Ensure-TestSettingsShape {
 
     foreach($property in @(
         @{ Name = "selectedUser"; Value = "demo-user" },
-        @{ Name = "lastEnvironment"; Value = "DEV" },
+        @{ Name = "lastEnvironment"; Value = "ENV-01" },
         @{ Name = "updateSource"; Value = "" }
     )){
         if($null -eq $Settings.PSObject.Properties[$property.Name]){

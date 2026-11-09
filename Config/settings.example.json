@@ -1,6 +1,6 @@
 {
   "selectedUser": "demo-user",
-  "lastEnvironment": "DEV",
+  "lastEnvironment": "ALPHA",
   "updateSource": "",
   "cyberArk": {
     "enabled": false,
@@ -15,9 +15,8 @@
     "authType": "Password",
     "interactiveLogin": true,
     "safeByEnvironment": {
-      "DEV": "SAFE_DEMO_DEV",
-      "QC": "SAFE_DEMO_QC",
-      "PROD": "SAFE_DEMO_PROD"
+      "ALPHA": "SAFE_ALPHA",
+      "BETA": "SAFE_BETA"
     }
   }
 }
