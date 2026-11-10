@@ -1,0 +1,16 @@
+{
+  "favorites": [
+    {
+      "Name": "SSMS ENV-01",
+      "Environment": "ENV-01",
+      "User": "demo-user",
+      "Application": "SSMS"
+    },
+    {
+      "Name": "VSCode ENV-01",
+      "Environment": "ENV-01",
+      "User": "demo-user",
+      "Application": "VSCode"
+    }
+  ]
+}

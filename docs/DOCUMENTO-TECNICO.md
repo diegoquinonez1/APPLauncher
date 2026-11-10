@@ -214,13 +214,16 @@ En `CredentialForm.ps1`, `Stop-ClipboardResetTimer` (línea 22) limpia el portap
 | Archivo               | Contenido                                                                                      | Versionado                                         |
 | --------------------- | ---------------------------------------------------------------------------------------------- | -------------------------------------------------- |
 | `settings.json`     | `selectedUser`, `lastEnvironment`, `updateSource`, bloque `cyberArk`                   | Ignorado (plantilla: `settings.example.json`)    |
-| `environments.json` | Array de `{name, domain, safe, color, default}`                                              | Sí                                                |
-| `applications.json` | Rutas de ejecutables y `LastScan`                                                            | Sí                                                |
-| `users.json`        | `users[]` y `defaultUser`                                                                  | Ignorado                                           |
-| `projects.json`     | `projects[]`: `name`, `environment`, `user`, `solution`, `folder`, `startupApps` | Sí                                                |
-| `links.json`        | `links[]`: `name`, `url`                                                                 | Sí                                                |
-| `favorites.json`    | Favoritos                                                                                      | Ignorado                                           |
+| `environments.json` | Array de `{name, domain, safe, color, default}`                                              | Ignorado (plantilla: `environments.example.json`) |
+| `applications.json` | Rutas de ejecutables y `LastScan`                                                            | Ignorado (plantilla: `applications.example.json`) |
+| `users.json`        | `users[]` y `defaultUser`                                                                  | Ignorado (plantilla: `users.example.json`)         |
+| `projects.json`     | `projects[]`: `name`, `environment`, `user`, `solution`, `folder`, `startupApps` | Ignorado (plantilla: `projects.example.json`)    |
+| `links.json`        | `links[]`: `name`, `url`                                                                 | Ignorado (plantilla: `links.example.json`)        |
+| `favorites.json`    | Favoritos                                                                                      | Ignorado (plantilla: `favorites.example.json`)    |
+| `usuario.ini`       | Archivo auxiliar local                                                                         | Ignorado (plantilla: `usuario.example.ini`)       |
 | `credentials.json`  | Credenciales protegidas con DPAPI                                                              | Ignorado (plantilla: `credentials.example.json`) |
+
+Regla: todo el contenido de `Config/` se considera local (puede contener nombres de cliente, dominios, usuarios o rutas) y no se versiona. Solo se suben archivos `*.example.json` / `*.example.ini` con valores ficticios. El log `Logs/launcher.log` tampoco se versiona.
 
 Ejemplo de `environments.json`:
 
@@ -494,8 +497,8 @@ Framework: **Pester 3.4.0** (fijado en CI con `-RequiredVersion 3.4.0`). Runner:
 
 1. Clonar el repositorio o copiar la carpeta de instalación.
 2. Copiar `Config/settings.example.json` a `Config/settings.json` y ajustar `updateSource` y, si aplica, el bloque `cyberArk`.
-3. Revisar `Config/environments.json` (dominio, carpeta de safe y color por entorno).
-4. Ajustar `Config/applications.json` con las rutas reales de los ejecutables (o usar RE-SCAN).
+3. Copiar `Config/environments.example.json` a `Config/environments.json` y ajustar dominio, carpeta de safe y color por entorno.
+4. Copiar `Config/applications.example.json` a `Config/applications.json` y ajustar las rutas reales de los ejecutables (o usar RE-SCAN).
 5. Ejecutar `Launcher.ps1` o `APPLauncher.exe`.
 
 La guía detallada está en [GUIA-DE-CONFIGURACION.md](./GUIA-DE-CONFIGURACION.md).

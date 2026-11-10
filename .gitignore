@@ -13,14 +13,12 @@
 *.secret
 *.secret.*
 
-# Configuración local o sensible
-Config/credentials.json
-Config/settings.json
-Config/users.json
-Config/*.local.json
-Config/*.secret.*
+# Configuración local: todo Config/ puede contener nombres de clientes, dominios, usuarios o rutas
+Config/*
+# Logs locales
 Logs/launcher.log
 
-# Permitir plantillas de ejemplo
+# Permitir solo plantillas de ejemplo (valores ficticios)
 !Config/*.sample.json
 !Config/*.example.json
+!Config/*.example.ini

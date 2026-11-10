@@ -1,0 +1,16 @@
+{
+  "projects": [
+    {
+      "name": "Proyecto ENV-01",
+      "environment": "ENV-01",
+      "user": "demo-user",
+      "solution": "",
+      "folder": "",
+      "startupApps": [
+        "SSMS",
+        "VisualStudio",
+        "VSCode"
+      ]
+    }
+  ]
+}

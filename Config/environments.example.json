@@ -1,0 +1,16 @@
+[
+  {
+    "name": "ENV-01",
+    "domain": "env01.example.local",
+    "safe": "SAFE_EJEMPLO_ENV01",
+    "color": "#2E86AB",
+    "default": true
+  },
+  {
+    "name": "ENV-02",
+    "domain": "env02.example.local",
+    "safe": "SAFE_EJEMPLO_ENV02",
+    "color": "#F18F01",
+    "default": false
+  }
+]
