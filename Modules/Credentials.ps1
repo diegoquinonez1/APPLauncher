@@ -3,6 +3,8 @@
     . (Join-Path $moduleRoot "ConfigManager.ps1")
 }
 
+$script:CredentialTargetPrefix = "APPLauncher"
+
 function Get-DomainByEnvironment {
 
     param($Environment)
@@ -25,7 +27,7 @@ function Add-Credential {
 
     $domain = Get-DomainByEnvironment $Environment
 
-    $target = "AON_{0}_{1}" -f $Environment,$User
+    $target = "{0}_{1}_{2}" -f $script:CredentialTargetPrefix,$Environment,$User
 
     cmdkey `
       /add:$target `
@@ -40,7 +42,7 @@ function Remove-Credential {
         $User
     )
 
-    $target = "AON_{0}_{1}" -f $Environment,$User
+    $target = "{0}_{1}_{2}" -f $script:CredentialTargetPrefix,$Environment,$User
 
     cmdkey /delete:$target
 }

@@ -179,7 +179,7 @@ Describe "Sprint 5: expiración y protección de credenciales" {
         (Get-LauncherCredential $script:envPrimary "demo-user") | Should Be $null
     }
 
-    It "Mantiene el flujo interactivo cuando CyberArk requiere login y no entrega contraseña" {
+    It "Usa la credencial local vigente cuando CyberArk requiere login interactivo sin entregar contraseña" {
         $settings = [PSCustomObject]@{
             selectedUser = "demo-user"
             lastEnvironment = $script:envPrimary
@@ -205,9 +205,9 @@ Describe "Sprint 5: expiración y protección de credenciales" {
         Save-Credentials ([PSCustomObject]@{credentials=@($manual)})
 
         $status = Get-LauncherCredentialStatus $script:envPrimary "demo-user"
-        $status.Status | Should Match "login interactivo|CyberArk|manual"
-        (Get-LauncherCredential $script:envPrimary "demo-user") | Should Be $null
-        (Test-LauncherCredential $script:envPrimary "demo-user") | Should Be $false
+        $status.Status | Should Be "Válida"
+        (Get-LauncherCredential $script:envPrimary "demo-user").Password | Should Be "demo-manual-123"
+        (Test-LauncherCredential $script:envPrimary "demo-user") | Should Be $true
     }
 
     It "Normaliza settings.json cuando falta selectedUser o lastEnvironment" {

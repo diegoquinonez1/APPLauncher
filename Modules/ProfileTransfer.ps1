@@ -1,4 +1,6 @@
-﻿$script:LauncherProfileConfigFiles = @(
+﻿$script:LauncherProfileEnvelopeTag = "APPLAUNCHER-PROFILE-V1"
+
+$script:LauncherProfileConfigFiles = @(
     "settings.json",
     "users.json",
     "favorites.json",
@@ -79,7 +81,7 @@ function Protect-LauncherProfilePayload {
         $saltText = [Convert]::ToBase64String($salt)
         $ivText = [Convert]::ToBase64String($iv)
         $cipherText = [Convert]::ToBase64String($cipherBytes)
-        $authenticatedText = "AON-LAUNCHER-PROFILE-V1|600000|$saltText|$ivText|$cipherText"
+        $authenticatedText = "$($script:LauncherProfileEnvelopeTag)|600000|$saltText|$ivText|$cipherText"
         $hmac = [System.Security.Cryptography.HMACSHA256]::new(
             [byte[]]($derivedKey[0..31])
         )
@@ -152,7 +154,7 @@ function Unprotect-LauncherProfilePayload {
         $saltText = [Convert]::ToBase64String($salt)
         $ivText = [Convert]::ToBase64String($iv)
         $cipherText = [Convert]::ToBase64String($cipherBytes)
-        $authenticatedText = "AON-LAUNCHER-PROFILE-V1|$($envelope.iterations)|$saltText|$ivText|$cipherText"
+        $authenticatedText = "$($script:LauncherProfileEnvelopeTag)|$($envelope.iterations)|$saltText|$ivText|$cipherText"
         $hmac = [System.Security.Cryptography.HMACSHA256]::new(
             [byte[]]($derivedKey[0..31])
         )

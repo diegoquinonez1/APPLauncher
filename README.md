@@ -11,8 +11,9 @@ Esta licencia prohíbe el uso comercial, no solamente vender copias. Un uso dent
 ## Inicio rápido
 
 - Ejecutar desde código: `./Launcher.ps1` (PowerShell en Windows).
-- Compilar el ejecutable: `./Build.ps1` (requiere el módulo `ps2exe`; el icono se toma de `Assets/favicon.ico`).
+- Compilar el ejecutable: `./Build.ps1` (instala `ps2exe` para el usuario actual si falta; el icono se toma de `Assets/favicon.ico`).
 - Ejecutar las pruebas: `./Tests/Run-Tests.ps1` (Pester 3.4 o posterior).
+- Documentación: `docs/DOCUMENTO-TECNICO.md` (arquitectura y referencia técnica), `docs/GUIA-DE-CONFIGURACION.md` y `docs/CyberArk-Documentacion.md`.
 
 El archivo `Launcher.ps1` determina la raíz de instalación, carga los módulos activos mediante dot-sourcing, prepara la configuración y las aplicaciones detectadas, crea la ventana principal y conecta sus eventos. `APPLauncher.exe` es el artefacto compilado de ese script.
 
@@ -33,13 +34,16 @@ El archivo `Launcher.ps1` determina la raíz de instalación, carga los módulos
 
 La integración actual está diseñada para ser segura y honesta con el usuario:
 
-- Si hay credenciales reales de servicio de CyberArk configuradas, el launcher intenta reutilizarlas como fuente principal.
-- Si no existen esas credenciales ni una autenticación programática habilitada, la aplicación abre la URL interactiva de CyberArk/Okta (`https://example.cyberark.example/privilegecloud/Accounts`) para que el usuario complete el login con correo, contraseña y MFA/push del celular.
+Al resolver la contraseña de un usuario en un entorno, `Get-LauncherCredentialStatus` aplica este orden:
+
+1. Si la integración está habilitada, consulta CyberArk con las credenciales de servicio. Si obtiene una contraseña, la guarda en la bóveda local y la marca como válida por ocho horas.
+2. Si no hubo resultado, usa la credencial local guardada para ese usuario y entorno. Según su vencimiento aparece como válida o vencida, por lo que una credencial local vigente tiene prioridad sobre el login interactivo.
+3. Si no hay credencial local, la integración está habilitada, no hay credenciales de servicio y `interactiveLogin` está activo, la aplicación abre la URL interactiva de CyberArk/Okta (`https://example.cyberark.example/privilegecloud/Accounts`) para que el usuario complete el login con correo, contraseña y MFA/push del celular.
 - La contraseña no se considera recuperada si el navegador solo inició la sesión interactiva y el sistema no devolvió un secreto válido.
 - El flujo manual sigue funcionando como respaldo para este alcance.
 - La lógica evita falsos positivos y evita guardar el HTML de la página de login como si fuera una contraseña.
 
-La configuración mínima esperada en `Config/settings.json` incluye propiedades base del launcher, por ejemplo `selectedUser`, `lastEnvironment`, `updateSource` y el bloque `cyberArk` con `enabled`, `loginUrl`, `interactiveLogin`, `allowManualFallback` y los safes por entorno.
+La configuración mínima esperada en `Config/settings.json` incluye propiedades base del launcher, por ejemplo `selectedUser`, `lastEnvironment`, `updateSource` y el bloque `cyberArk` con `enabled`, `loginUrl`, `interactiveLogin` y `allowManualFallback`. El safe de cada entorno se define en `Config/environments.json`.
 
 La app también normaliza la configuración al cargarla para evitar fallos cuando faltan propiedades obligatorias, lo que corrige el cierre por `selectedUser` ausente.
 
@@ -101,7 +105,7 @@ flowchart LR
 
 ### Lanzamiento de una aplicación
 
-El inicio de aplicaciones no consulta ni descifra la bóveda de credenciales: delega la autenticación interactiva a `runas.exe`. La gestión de credenciales es una funcionalidad separada para guardar, consultar, copiar y exportar secretos.
+El inicio de aplicaciones no consulta ni descifra la bóveda de credenciales: delega la autenticación interactiva a `runas.exe`. La gestión de credenciales es una funcionalidad separada para guardar, verificar, copiar y eliminar credenciales. Los secretos solo salen del equipo dentro de un perfil exportado y protegido por frase de paso.
 
 ```mermaid
 sequenceDiagram
@@ -147,7 +151,7 @@ sequenceDiagram
         Transfer->>Config: Leer settings, users, favorites, applications, projects y links
         Transfer->>Cred: Descifrar credenciales locales DPAPI
         Transfer->>Transfer: Cifrar payload con AES-256 y autenticar con HMAC-SHA256
-        Transfer->>Zip: Crear perfil.json, credentials.json.enc y archivos JSON
+        Transfer->>Zip: Crear profile.json, credentials.json.enc y los seis archivos JSON
         Zip-->>U: Perfil ZIP protegido
     else Importar
         U->>UI: Selecciona ZIP y confirma reemplazo
@@ -209,6 +213,7 @@ Los módulos indicados como **activos** se cargan desde `Launcher.ps1`. `ApplyUp
 | `Modules/CredentialForm.ps1` | Activo | Ventana WinForms para guardar, comprobar, copiar y eliminar credenciales; limpia el portapapeles mediante temporizador. |
 | `Modules/CredentialManager.ps1` | Activo | Persistencia de credenciales, cifrado DPAPI, lectura/descifrado, estado y vencimiento de ocho horas, y limpieza de credenciales expiradas. |
 | `Modules/Credentials.ps1` | Inactivo/heredado | Funciones anteriores basadas en `cmdkey`; no es el gestor usado por el punto de entrada actual. |
+| `Modules/CyberArkProvider.ps1` | Activo | Integración con CyberArk/Okta: resuelve URL y safe por entorno, consulta la cuenta de servicio y abre el login interactivo; la sesión interactiva no devuelve contraseña. |
 | `Modules/FavoriteForm.ps1` | Activo | Ventana WinForms para crear, editar, seleccionar y eliminar favoritos. |
 | `Modules/FavoriteManager.ps1` | Activo | CRUD de favoritos persistidos en `favorites.json` con usuario, entorno y aplicación. |
 | `Modules/Favorites.ps1` | Inactivo/vacío | Archivo sin contenido; no participa en el runtime actual. |
@@ -232,7 +237,8 @@ Los módulos indicados como **activos** se cargan desde `Launcher.ps1`. `ApplyUp
 
 | Archivo | Contenido lógico |
 |---|---|
-| `Config/settings.json` | Usuario y entorno seleccionados, tema y origen de actualizaciones. |
+| `Config/settings.json` | Usuario y entorno seleccionados, configuración de CyberArk y origen de actualizaciones. |
+| `Config/environments.json` | Ambientes con nombre, dominio, safe de CyberArk, color hexadecimal y entorno predeterminado. |
 | `Config/users.json` | Usuario predeterminado y lista de usuarios. |
 | `Config/applications.json` | Rutas de ejecutables detectadas/configuradas y fecha del último escaneo. |
 | `Config/favorites.json` | Colección de favoritos con usuario, entorno y aplicación. |
@@ -251,13 +257,15 @@ Launcher.ps1                 Punto de entrada y composición de la UI
 Build.ps1                    Compilación con ps2exe
 APPLauncher.exe              Ejecutable compilado
 Launcher.version             Versión del producto
-Modules/                      Lógica, persistencia, formularios y actualización
+Modules/                     Lógica, persistencia, formularios y actualización
 Config/                       JSON de configuración local
 Backups/                      Respaldos
 Logs/launcher.log             Registro de actividad
 Assets/favicon.ico            Icono del ejecutable
 Tests/                        Suite Pester por funcionalidad/sprint
-Publish-Update.ps1             Generación de paquetes de actualización
+docs/                         Documentación técnica y guías
+.github/workflows/            CI: Pester, PSScriptAnalyzer y escaneo de secretos
+Publish-Update.ps1           Generación de paquetes de actualización
 ```
 
 ## Desarrollo y validación
