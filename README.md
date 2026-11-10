@@ -200,29 +200,23 @@ sequenceDiagram
 
 ## Módulos
 
-Los módulos indicados como **activos** se cargan desde `Launcher.ps1`. `ApplyUpdate.ps1` es un helper de proceso independiente iniciado por el actualizador. Los scripts heredados/inactivos no forman parte del flujo actual del launcher.
+Todos los módulos listados se cargan desde `Launcher.ps1`, salvo `ApplyUpdate.ps1`, que es un helper de proceso independiente iniciado por el actualizador.
 
 | Archivo | Estado | Responsabilidad técnica |
 |---|---|---|
 | `Modules/AppLauncher.ps1` | Activo | Resuelve el dominio asociado al entorno, valida la ruta de aplicación y la inicia mediante `runas.exe /netonly`; registra el inicio. |
 | `Modules/ApplicationManager.ps1` | Activo | Lee/escribe `applications.json`, detecta SSMS, Visual Studio, VS Code y Report Builder, y guarda la fecha del último escaneo. |
-| `Modules/Applications.ps1` | Inactivo | Implementación anterior de detección de ejecutables; no se carga desde el punto de entrada actual. |
 | `Modules/ApplyUpdate.ps1` | Helper independiente | Valida la solicitud y el manifiesto preparados, espera el cierre del proceso padre, respalda y reemplaza archivos permitidos, restaura en caso de error y reinicia. |
-| `Modules/Common.ps1` | Inactivo/vacío | Archivo sin contenido; no participa en el runtime actual. |
 | `Modules/ConfigManager.ps1` | Activo | Define rutas de `Config`, `Backups` y `Logs`; inicializa archivos base, lee/escribe JSON y crea respaldos. |
 | `Modules/CredentialForm.ps1` | Activo | Ventana WinForms para guardar, comprobar, copiar y eliminar credenciales; limpia el portapapeles mediante temporizador. |
 | `Modules/CredentialManager.ps1` | Activo | Persistencia de credenciales, cifrado DPAPI, lectura/descifrado, estado y vencimiento de ocho horas, y limpieza de credenciales expiradas. |
-| `Modules/Credentials.ps1` | Inactivo/heredado | Funciones anteriores basadas en `cmdkey`; no es el gestor usado por el punto de entrada actual. |
 | `Modules/CyberArkProvider.ps1` | Activo | Integración con CyberArk/Okta: resuelve URL y safe por entorno, consulta la cuenta de servicio y abre el login interactivo; la sesión interactiva no devuelve contraseña. |
 | `Modules/FavoriteForm.ps1` | Activo | Ventana WinForms para crear, editar, seleccionar y eliminar favoritos. |
 | `Modules/FavoriteManager.ps1` | Activo | CRUD de favoritos persistidos en `favorites.json` con usuario, entorno y aplicación. |
-| `Modules/Favorites.ps1` | Inactivo/vacío | Archivo sin contenido; no participa en el runtime actual. |
-| `Modules/Logging.ps1` | Inactivo/vacío | Archivo sin contenido; el registro actual está en `LogManager.ps1`. |
 | `Modules/LogManager.ps1` | Activo | Escribe eventos de aplicación/proyecto/errores, calcula métricas del dashboard, expone lectura y permite limpiar el log. |
 | `Modules/ProfileManager.ps1` | Activo | CRUD de perfiles de proyecto en `projects.json`. |
 | `Modules/ProfileTransfer.ps1` | Activo | Exporta/importa ZIPs; protege credenciales portables con PBKDF2, AES-256-CBC y HMAC-SHA256; valida archivos, respalda y ejecuta rollback. |
 | `Modules/ProjectLauncher.ps1` | Activo | Valida proyecto, aplicaciones, solución y carpeta antes de iniciar acciones; lanza aplicaciones, solución y Explorer y registra el proyecto. |
-| `Modules/Projects.ps1` | Inactivo/vacío | Archivo sin contenido; la gestión actual está en `ProfileManager.ps1` y `ProjectsForm.ps1`. |
 | `Modules/ProjectsForm.ps1` | Activo | UI para administrar perfiles, rutas de solución/carpeta y aplicaciones de inicio. |
 | `Modules/QuickLinks.ps1` | Activo | Normaliza y valida URLs HTTP/HTTPS, impide nombres duplicados, persiste en `links.json` y abre el destino. |
 | `Modules/QuickLinksForm.ps1` | Activo | UI CRUD para accesos web. |
@@ -230,7 +224,6 @@ Los módulos indicados como **activos** se cargan desde `Launcher.ps1`. `ApplyUp
 | `Modules/UiHelpers.ps1` | Activo | Message boxes comunes y `Invoke-Safely`, que captura excepciones, las registra y las presenta al usuario. |
 | `Modules/UpdateManager.ps1` | Activo | Consulta versiones, valida nombres/rutas y SHA-256 del ZIP/manifiesto, extrae staging temporal y entrega la actualización al helper. |
 | `Modules/UserManager.ps1` | Activo | CRUD de usuarios en `users.json`; impide eliminar o modificar el usuario predeterminado y evita duplicados. |
-| `Modules/Users.ps1` | Inactivo/heredado | Implementación anterior de operaciones de usuario; no se carga desde el punto de entrada actual. |
 | `Modules/UsersForm.ps1` | Activo | UI para administrar usuarios y actualizar el selector principal. |
 
 ## Persistencia
